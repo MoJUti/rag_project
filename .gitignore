@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+.venv/
+env/
+venv/
+
+# 环境配置（含密钥）
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# 数据和模型（太大）
+*.bin
+*.pt
+*.pth
+chroma_db/          # Chroma 本地数据库
