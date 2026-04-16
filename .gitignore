@@ -21,3 +21,8 @@ venv/
 chroma_db/          # Chroma 本地数据库
 
 md5.text
+
+# 文档草稿（不提交到 GitHub）
+doc/**/*.txt
+doc/**/*.md
+doc/**/*.markdown

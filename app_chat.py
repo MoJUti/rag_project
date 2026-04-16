@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import streamlit as  st
+from uuid import uuid4
 from rag import RagService
 from file_history_store import get_history
 import config_data as config
@@ -13,11 +14,15 @@ st.title("智能客服")
 # 分隔符
 st.divider()
 
+if "session_id" not in st.session_state:
+    st.session_state["session_id"] = f"chat_{uuid4().hex[:12]}"
+
+session_config = config.build_session_config(st.session_state["session_id"])
+
 # 避免性能压力，session_state 存入对象
 if "message" not in st.session_state:
     # 从本地文件加载该 session_id 对应的历史记录
-    session_id = config.session_config["configurable"]["session_id"]
-    history = get_history(session_id)
+    history = get_history(st.session_state["session_id"])
     
     messages = []
     # 遍历已保存的聊天历史
@@ -50,13 +55,13 @@ if prompt :
         # 调用 RAG服务
 
         # 直接输出
-        # res= st.session_state["rag"].chain.invoke({"input":prompt},config.session_config)
+        # res= st.session_state["rag"].chain.invoke({"input":prompt},session_config)
         #
         # st.chat_message("assistant").write(res)
         # st.session_state["message"].append({"role":"assistant","content":res})
 
         # 流式输出
-        res_stream = st.session_state["rag"].chain.stream({"input": prompt}, config.session_config)
+        res_stream = st.session_state["rag"].chain.stream({"input": prompt}, session_config)
 
         def capture(generator, cache_list):
             for chunk in generator:

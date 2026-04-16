@@ -1,4 +1,4 @@
-# 智能客服 - 基于 RAG 的大语言模型知识库问答系统
+# 智能刑法问答 - 基于 RAG 的大语言模型知识库问答系统
 
 本项目是一个基于 **Retrieval-Augmented Generation (RAG)** 架构的本地知识库问答系统。通过整合文档切片、向量化存储和检索，结合大语言模型，实现带上下文记忆的智能客服功能。
 
@@ -62,15 +62,31 @@ ANONYMIZED_TELEMETRY=False
 
 ### 界面一：构建知识库（知识库文档上传）
 打开文档上传页面，将你准备好的知识库文档处理写入向量数据库：
+
 ```powershell
-streamlit run app_upload.py
+# 推荐：在项目根目录执行，且不依赖当前环境 PATH
+.\.venv\Scripts\python.exe -m streamlit run app_upload.py
+或者：uv run streamlit app_upload.py
 ```
 
 ### 界面二：智能客服对话界面
 知识库加载完成后，运行聊天应用，向 AI 进行提问测试检索效果：
+
 ```powershell
+.\.venv\Scripts\python.exe -m streamlit run app_chat.py
+或者uv run streamlit app_chat.py
+```
+
+如果你已经激活了虚拟环境，也可以简化为：
+
+```powershell
+streamlit run app_upload.py
 streamlit run app_chat.py
 ```
+
+### 常见启动问题
+- 如果提示找不到 `.venv\Scripts\python.exe`，通常是当前目录不在项目根目录，请先 `cd` 到 `KnowledgeBase-RAG-LLM-System`。
+- 如果模型调用报错，请检查 `.env` 中 `DASHSCOPE_API_KEY` 是否正确。
 
 ## ⚙️ 自定义配置
 你可以在 `config_data.py` 文件中修改系统的一些关键配置参数：
@@ -78,5 +94,6 @@ streamlit run app_chat.py
 - `collection_name`: ChromaDB 里的集合名。
 - `embedding_model_name`: 文本嵌入模型（默认 `text-embedding-v4`）。
 - `chat_model_name`: 提供对话反馈的大本模型（默认 `qwen3-max`）。
-- `similarity_threshold`: 向量库匹配 Top K 数量阈值。
-- `session_config`: 修改内部对话缓存的 session ID 取值。
+- `retrieval_top_k`: 向量检索 Top K。
+- `retrieval_source_filter`: 按来源文件过滤检索结果（空字符串表示不过滤）。
+- `session_config`: 默认会话配置（系统已支持按会话动态生成）。
