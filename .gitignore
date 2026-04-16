@@ -19,3 +19,5 @@ venv/
 *.pt
 *.pth
 chroma_db/          # Chroma 本地数据库
+
+md5.text
