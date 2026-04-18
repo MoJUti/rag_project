@@ -17,6 +17,10 @@
 - 轻量摘要模型：`qwen-turbo`
 - 向量模型：`text-embedding-v4`
 
+预览：
+
+![alt text](image/演示01.png)
+
 ## 2. 目录结构
 
 ```text
