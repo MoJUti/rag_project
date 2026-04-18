@@ -1,12 +1,9 @@
 import unittest
 from pathlib import Path
 
-import config_data as c
-from knowledge_base import (
-    preprocess_legal_text,
-    parse_legal_article_units,
-    build_chunks_from_article_units,
-)
+from core import config as c
+from ingestion.legal_chunker import build_chunks_from_article_units, parse_legal_article_units
+from ingestion.legal_preprocess import preprocess_legal_text
 
 
 class TestStep1Metadata(unittest.TestCase):

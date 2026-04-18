@@ -1,6 +1,6 @@
 import unittest
 
-from knowledge_base import add_texts_in_batches
+from ingestion.ingest_service import add_texts_in_batches
 
 
 class FakeChroma:
