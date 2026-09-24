@@ -15,6 +15,11 @@ load_dotenv()
 
 st.title("知识库更新服务")
 
+if not os.getenv("DASHSCOPE_API_KEY", "").strip():
+    st.error("未配置 DASHSCOPE_API_KEY，暂时无法初始化向量模型。")
+    st.info("请复制 .env.example 为 .env，填入阿里云百炼 API Key 后刷新页面。")
+    st.stop()
+
 uploader_file = st.file_uploader(
     "请上传TXT文件",
     type=["txt"],

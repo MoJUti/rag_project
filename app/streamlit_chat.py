@@ -164,6 +164,11 @@ def render_bubble(role: str, content: str) -> None:
 
 st.set_page_config(page_title="智能法律问答系统", page_icon="⚖️", layout="centered")
 
+if not os.getenv("DASHSCOPE_API_KEY", "").strip():
+    st.error("未配置 DASHSCOPE_API_KEY，暂时无法初始化问答服务。")
+    st.info("请复制 .env.example 为 .env，填入阿里云百炼 API Key 后刷新页面。")
+    st.stop()
+
 st.markdown(
     """
 <style>

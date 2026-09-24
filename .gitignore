@@ -6,6 +6,7 @@ __pycache__/
 .venv/
 env/
 venv/
+logs/
 
 # 环境配置（含密钥）
 .env

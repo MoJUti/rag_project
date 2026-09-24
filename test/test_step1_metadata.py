@@ -9,7 +9,7 @@ from ingestion.legal_preprocess import preprocess_legal_text
 class TestStep1Metadata(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        raw = Path("data/刑法.txt").read_text(encoding="utf-8")
+        raw = Path("data/中华人民共和国刑法.txt").read_text(encoding="utf-8")
         cls.cleaned = preprocess_legal_text(raw)
         cls.article_units = parse_legal_article_units(cls.cleaned)
         cls.article_to_chapter = {

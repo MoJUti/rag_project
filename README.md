@@ -75,7 +75,13 @@ pip install -r requirements.txt
 
 ## 4. 环境变量
 
-在项目根目录创建 `.env`：
+先复制环境变量模板：
+
+```powershell
+Copy-Item .env.example .env
+```
+
+然后在项目根目录的 `.env` 中填写真实密钥：
 
 ```env
 DASHSCOPE_API_KEY=sk-你的真实密钥
