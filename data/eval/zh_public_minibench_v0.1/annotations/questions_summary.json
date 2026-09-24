@@ -1,0 +1,35 @@
+{
+  "schema_version": "1.1",
+  "suite": "retrieval",
+  "question_count": 55,
+  "by_split": {
+    "dev": 19,
+    "holdout-public": 21,
+    "smoke": 15
+  },
+  "by_modality": {
+    "cross_document": 2,
+    "document_text": 37,
+    "image_ocr": 7,
+    "structured_markdown": 9
+  },
+  "by_difficulty": {
+    "easy": 22,
+    "hard": 7,
+    "medium": 26
+  },
+  "multi_document_count": 8,
+  "all_have_answers": true,
+  "all_have_evidence": true,
+  "all_relevant_documents_have_evidence": true,
+  "relevant_document_count": 34,
+  "relevant_documents_by_format": {
+    "docx": 5,
+    "jpg": 2,
+    "md": 9,
+    "pdf": 2,
+    "png": 5,
+    "pptx": 4,
+    "xlsx": 7
+  }
+}

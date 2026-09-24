@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0",
+  "question_count": 82,
+  "document_count": 55,
+  "covered_document_count": 55,
+  "answerable_count": 81,
+  "unanswerable_count": 1,
+  "by_source": {
+    "Workspace-Bench-Lite/task_lite_clean_cn": 40,
+    "opendatalab/OmniDocBench": 12,
+    "wenge-research/TableEval": 30
+  },
+  "by_split": {
+    "dev": 34,
+    "holdout-public": 25,
+    "smoke": 23
+  },
+  "by_difficulty": {
+    "easy": 29,
+    "hard": 4,
+    "medium": 49
+  },
+  "retrieval_ground_truth": "relevant_document_ids",
+  "fine_grained_ground_truth": "evidence[].block_id or evidence[].locator"
+}

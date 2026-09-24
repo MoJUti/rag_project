@@ -1,0 +1,4 @@
+{"case_id": "refuse-01", "query": "宏海科技2025年已经实现的营业收入是多少？", "candidate_document_ids": ["workspace-192-01"], "gold_answer": "资料仅提供截至2024年的实际营业收入，无法确定2025年已经实现的营业收入。", "answerable": false, "reason": "requested_period_not_covered"}
+{"case_id": "refuse-02", "query": "3月员工生日会因天气取消后的补办日期是哪一天？", "candidate_document_ids": ["workspace-340-01", "workspace-340-02", "workspace-340-03"], "gold_answer": "现有生日会材料未说明活动取消或补办日期。", "answerable": false, "reason": "event_not_present"}
+{"case_id": "refuse-03", "query": "固定资产报废申请提交后承诺在几个工作日内审批完成？", "candidate_document_ids": ["workspace-346-01"], "gold_answer": "申请审批表未规定审批完成时限。", "answerable": false, "reason": "field_not_present"}
+{"case_id": "refuse-04", "query": "公司行政体系六大模块在2025年的实际完成率分别是多少？", "candidate_document_ids": ["workspace-354-01"], "gold_answer": "行政体系建设蓝图列出了六大模块，但未提供2025年各模块的实际完成率。", "answerable": false, "reason": "requested_measurement_not_present"}

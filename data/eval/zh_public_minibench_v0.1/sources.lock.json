@@ -1,0 +1,27 @@
+{
+  "bundle": "Chinese Public MiniBench v0.1",
+  "generated_at": "2026-09-24",
+  "sources": [
+    {
+      "dataset": "Workspace-Bench/Workspace-Bench-Lite",
+      "revision": "60b08b1cc2e8054afbc3ca2160d37876b4f0765c",
+      "url": "https://huggingface.co/datasets/Workspace-Bench/Workspace-Bench-Lite",
+      "upstream_project": "https://github.com/longyuewangdcu/Workspace-Bench",
+      "declared_license": "MIT"
+    },
+    {
+      "dataset": "wenge-research/TableEval",
+      "revision": "12a8eb64156e9fe28c74c07ef91ac0f652f24a8d",
+      "url": "https://huggingface.co/datasets/wenge-research/TableEval",
+      "upstream_project": "https://github.com/wenge-research/TableEval",
+      "declared_license": "Apache-2.0"
+    },
+    {
+      "dataset": "opendatalab/OmniDocBench",
+      "revision": "aa1ee96d106dbe53d0ae59474d75c6e6d9b53fec",
+      "url": "https://huggingface.co/datasets/opendatalab/OmniDocBench",
+      "upstream_project": "https://github.com/opendatalab/OmniDocBench",
+      "declared_license": "Apache-2.0"
+    }
+  ]
+}

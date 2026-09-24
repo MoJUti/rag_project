@@ -1,0 +1,13 @@
+{"question_id": "omni-01-01", "original_query": "这页教材属于哪一章？", "reason": "章节标题识别只适合解析冒烟，不是全库真实检索需求"}
+{"question_id": "omni-02-01", "original_query": "页面说明最小的自然数是多少？", "reason": "答案属于常识，不依赖知识库"}
+{"question_id": "omni-03-01", "original_query": "这页课件介绍的系统类型是什么？", "reason": "直接询问页面标题，关键词泄漏且难度过低"}
+{"question_id": "omni-06-01", "original_query": "第13题页面中标记选择了哪个选项？", "reason": "识别勾选项属于视觉解析任务，不应计入文本检索排名"}
+{"question_id": "omni-11-01", "original_query": "页面上展示的选择题答案是什么选项，对应数值是多少？", "reason": "识别试卷选项属于视觉解析任务，不应计入文本检索排名"}
+{"question_id": "te-2040-01", "original_query": "从文本中找出表格内合并的单元格，明确其范围和内容。", "reason": "当前正式输入是Markdown；合并单元格的rowspan/colspan结构已丢失，题目与输入表示不匹配"}
+{"question_id": "te-2041-01", "original_query": "找出表格中所有合并单元格的范围和内容，并标明。", "reason": "当前正式输入是Markdown；合并单元格的rowspan/colspan结构已丢失，题目与输入表示不匹配"}
+{"question_id": "te-2042-01", "original_query": "从文本中找出表格被合并的单元格，并列出其范围及内容。", "reason": "当前正式输入是Markdown；合并单元格的rowspan/colspan结构已丢失，题目与输入表示不匹配"}
+{"question_id": "te-2043-01", "original_query": "从文本中找出表格内合并的单元格，明确其范围和内容。", "reason": "当前正式输入是Markdown；合并单元格的rowspan/colspan结构已丢失，题目与输入表示不匹配"}
+{"question_id": "wb-329-01-02", "original_query": "员工满意度抽样调查的样本量和覆盖率分别是多少？", "reason": "抽样方法元数据不是典型知识检索需求，替换为薪酬风险分析题"}
+{"question_id": "wb-340-01-01", "original_query": "员工生日会PPT目录把活动分成几个环节？", "reason": "只数PPT目录项目，信息价值和检索难度过低"}
+{"question_id": "wb-340-03-01", "original_query": "员工生日祝福卡上的核心生日祝福语是什么？", "reason": "通用生日祝福可由模型常识直接回答，无法证明检索有效"}
+{"question_id": "wb-340-03-02", "original_query": "生日祝福卡感谢员工的哪项付出？", "reason": "通用感谢语信息量过低，且可能在多份材料中重复"}

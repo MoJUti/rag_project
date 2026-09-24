@@ -1,0 +1,74 @@
+{
+  "schema_version": "1.1",
+  "status": "verified_v1",
+  "retrieval": {
+    "question_count": 55,
+    "by_split": {
+      "dev": 19,
+      "holdout-public": 21,
+      "smoke": 15
+    },
+    "by_modality": {
+      "cross_document": 2,
+      "document_text": 37,
+      "image_ocr": 7,
+      "structured_markdown": 9
+    },
+    "by_difficulty": {
+      "easy": 22,
+      "hard": 7,
+      "medium": 26
+    },
+    "multi_document_count": 8,
+    "all_have_answers": true,
+    "all_have_evidence": true,
+    "all_relevant_documents_have_evidence": true,
+    "relevant_document_count": 34,
+    "relevant_documents_by_format": {
+      "docx": 5,
+      "jpg": 2,
+      "md": 9,
+      "pdf": 2,
+      "png": 5,
+      "pptx": 4,
+      "xlsx": 7
+    }
+  },
+  "table_qa_case_count": 26,
+  "parser_case_count": 12,
+  "refusal_case_count": 4,
+  "excluded_case_count": 13,
+  "validation": {
+    "table_qa_valid": true,
+    "parser_cases_valid": true,
+    "refusal_cases_valid": true,
+    "locally_corrected_upstream_gold_count": 4
+  },
+  "metric_boundaries": {
+    "retrieval_questions.jsonl": [
+      "Recall@K",
+      "MRR",
+      "nDCG@K",
+      "complete-evidence Recall@K"
+    ],
+    "table_qa_cases.jsonl": [
+      "answer correctness",
+      "answer F1",
+      "faithfulness"
+    ],
+    "parser_cases.jsonl": [
+      "layout F1",
+      "reading-order edit distance",
+      "text/formula normalized edit distance"
+    ],
+    "refusal_cases.jsonl": [
+      "correct rejection rate",
+      "unsupported claim rate"
+    ]
+  },
+  "known_limitations": [
+    "公开数据可能出现在模型预训练语料中，不能替代私有盲测集",
+    "当前为单人复核，正式发布前仍建议由第二位标注员独立复核并计算一致率",
+    "TableEval表格问答不用于全库检索排名，因为多数问题默认用户已在查看指定表格"
+  ]
+}
