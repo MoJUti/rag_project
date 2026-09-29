@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="从现有 RAG MVP 演进为现代知识库系统的技术路线、阶段节点和验收门槛">
+  <title>现代知识库系统演进方案</title>
+  <style>
+    :root {
+      --navy-950:#071b2d; --navy-900:#0b2942; --navy-700:#28536f;
+      --blue-700:#075d9b; --blue-600:#0877bd; --blue-100:#e4f1fa;
+      --teal-700:#006d63; --teal-600:#008c7f; --teal-100:#dff4f1;
+      --amber-700:#98550c; --amber-100:#fff3df; --red-700:#a63a43; --red-100:#fbe9eb;
+      --green-700:#247148; --green-100:#e7f5ec;
+      --page:#edf2f5; --paper:#fff; --paper-raised:#fff; --inset:#f6f8fa;
+      --text-1:#102a40; --text-2:#405668; --text-3:#708392;
+      --line:#d4dde4; --line-soft:#e6ecef; --focus:rgba(8,119,189,.25);
+      --shadow:0 8px 28px rgba(16,42,64,.07); --radius-sm:6px; --radius-md:10px; --radius-lg:14px; --nav-width:276px;
+    }
+    body[data-theme="dark"] {
+      --page:#07131e; --paper:#0d1f2d; --paper-raised:#112837; --inset:#0a1925;
+      --text-1:#ecf4f8; --text-2:#b7c8d4; --text-3:#8299a9; --line:#294354; --line-soft:#1b3445;
+      --blue-100:#102f48; --teal-100:#123b38; --amber-100:#3b2c16; --red-100:#402127; --green-100:#17382a;
+      --shadow:0 10px 34px rgba(0,0,0,.22);
+    }
+    *{box-sizing:border-box} html{scroll-behavior:smooth;scroll-padding-top:28px}
+    body{margin:0;background:var(--page);color:var(--text-1);font:15px/1.72 "SF Pro Text","PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+    a{color:var(--blue-700)} button{font:inherit} code,pre,.mono,.nav-index,.section-index,.metric strong,.phase-no{font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;font-variant-numeric:tabular-nums}
+    :focus-visible{outline:3px solid var(--focus);outline-offset:2px} ::selection{background:var(--blue-100);color:var(--text-1)}
+    .mobile-bar{display:none;position:sticky;top:0;z-index:30;height:62px;padding:0 16px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--paper) 94%,transparent);backdrop-filter:blur(14px)}
+    .mobile-title{display:flex;min-width:0;align-items:center;gap:9px;font-size:14px;font-weight:720}.mobile-title::before{content:"";width:6px;height:28px;border-radius:2px;background:var(--teal-600)}.mobile-title span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .mobile-actions{display:flex;gap:8px}.utility-button{display:grid;width:42px;height:42px;place-items:center;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--paper);color:var(--text-1);cursor:pointer}.utility-button:hover{border-color:var(--blue-600);background:var(--blue-100)}
+    .layout{display:grid;grid-template-columns:var(--nav-width) minmax(0,1fr);width:min(1760px,100%);margin:0 auto}.side-nav{position:sticky;top:0;height:100vh;padding:28px 18px;overflow-y:auto;border-right:1px solid var(--line);background:var(--page);scrollbar-width:thin}
+    .nav-heading{padding:0 10px 18px;border-bottom:1px solid var(--line)}.nav-heading strong{display:block;color:var(--navy-900);font-size:15px}.nav-heading small{display:block;margin-top:4px;color:var(--text-3);font-size:11px}.nav-links{display:grid;gap:3px;padding-top:16px}
+    .nav-link{display:grid;min-height:42px;grid-template-columns:28px minmax(0,1fr);align-items:center;gap:8px;padding:7px 10px;border-radius:var(--radius-sm);color:var(--text-2);font-size:12.5px;font-weight:600;text-decoration:none}.nav-link:hover,.nav-link.active{color:var(--blue-700);background:var(--blue-100)}.nav-index{color:var(--text-3);font-size:10px;font-weight:650}
+    .document{min-width:0;padding:24px clamp(18px,3.2vw,52px) 90px}.cover,.section{max-width:1240px;margin-right:auto;margin-left:auto;border:1px solid var(--line);background:var(--paper)}
+    .cover{position:relative;min-height:min(720px,calc(100vh - 48px));padding:clamp(48px,7vw,96px) clamp(28px,6.5vw,88px) 48px;overflow:hidden;border-radius:var(--radius-lg);box-shadow:var(--shadow)}.cover::before{content:"";position:absolute;inset:0 0 auto;height:6px;background:linear-gradient(90deg,var(--navy-900) 0 48%,var(--blue-600) 48% 76%,var(--teal-600) 76%)}
+    .cover::after{content:"";position:absolute;top:70px;right:-80px;width:420px;height:420px;opacity:.42;background-image:linear-gradient(var(--line-soft) 1px,transparent 1px),linear-gradient(90deg,var(--line-soft) 1px,transparent 1px);background-size:24px 24px;mask-image:radial-gradient(circle at center,#000 0,transparent 68%);pointer-events:none}
+    .cover-content{position:relative;z-index:1;max-width:900px}.cover-kicker{color:var(--blue-700);font-size:13px;font-weight:720;letter-spacing:.12em}.cover h1{max-width:900px;margin:20px 0 0;color:var(--navy-950);font-size:clamp(42px,5.8vw,70px);font-weight:790;line-height:1.06;letter-spacing:-.04em;text-wrap:balance}.cover-subtitle{max-width:840px;margin:26px 0 0;color:var(--text-2);font-size:clamp(18px,2vw,24px);line-height:1.55}.cover-purpose{max-width:820px;margin:26px 0 0;color:var(--text-2);font-size:16px}.cover-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:28px}.cover-tag{padding:6px 10px;border:1px solid var(--line);border-radius:4px;background:var(--inset);color:var(--text-2);font-size:11px;font-weight:620}
+    .system-rail{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:clamp(58px,9vw,100px)}.rail-node{position:relative;padding:28px 18px 0 0;border-top:1px solid var(--line)}.rail-node::before{content:"";position:absolute;top:-6px;left:0;width:10px;height:10px;border:2px solid var(--paper);border-radius:50%;background:var(--teal-600);box-shadow:0 0 0 1px var(--teal-600)}.rail-node strong{display:block;color:var(--navy-900);font-size:13px}.rail-node span{display:block;margin-top:5px;color:var(--text-3);font-size:11px}.cover-footer{display:flex;justify-content:space-between;gap:24px;margin-top:52px;padding-top:18px;border-top:1px solid var(--line);color:var(--text-3);font-size:11px}
+    .section{margin-top:18px;padding:clamp(30px,4.5vw,58px);border-radius:var(--radius-lg)}.section-heading{display:grid;grid-template-columns:52px minmax(0,1fr);gap:18px;align-items:start;margin-bottom:32px}.section-index{display:grid;width:50px;height:50px;place-items:center;border-radius:var(--radius-sm);background:var(--navy-900);color:#fff;font-size:13px;font-weight:720}.section h2{margin:0;color:var(--navy-950);font-size:clamp(27px,3.1vw,38px);line-height:1.16;letter-spacing:-.025em}.section-lead{max-width:940px;margin:7px 0 0;color:var(--text-2);font-size:16px}.section h3{margin:38px 0 14px;color:var(--navy-900);font-size:21px}.section h4{margin:0;color:var(--navy-900);font-size:15px}.section p,.section li{color:var(--text-2)}.section ul{padding-left:20px}.section li+li{margin-top:5px}
+    body[data-theme="dark"] .cover h1,body[data-theme="dark"] .section h2,body[data-theme="dark"] .section h3,body[data-theme="dark"] .section h4,body[data-theme="dark"] .nav-heading strong,body[data-theme="dark"] th{color:var(--text-1)}
+    .notice{display:grid;grid-template-columns:4px minmax(0,1fr);gap:16px;padding:18px 20px;border:1px solid var(--line);border-radius:var(--radius-md);background:var(--inset)}.notice::before{content:"";border-radius:3px;background:var(--blue-600)}.notice.warning{background:var(--amber-100)}.notice.warning::before{background:var(--amber-700)}.notice.success{background:var(--green-100)}.notice.success::before{background:var(--green-700)}.notice strong{display:block}.notice p{margin:5px 0 0;font-size:13px}
+    .grid-2,.grid-3,.grid-4{display:grid;gap:14px}.grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}.grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}.grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}.card{padding:18px;border:1px solid var(--line);border-radius:var(--radius-md);background:var(--paper-raised)}.card p{margin:8px 0 0;font-size:13px}.eyebrow{color:var(--blue-700);font:720 10px/1.4 "SFMono-Regular",Consolas,monospace;letter-spacing:.08em}
+    .metric-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:18px}.metric{padding:16px;border:1px solid var(--line);border-top:3px solid var(--teal-600);border-radius:var(--radius-sm);background:var(--paper-raised)}.metric strong{display:block;color:var(--navy-900);font-size:22px;line-height:1.1}.metric span{display:block;margin-top:8px;color:var(--text-3);font-size:11px}
+    .table-wrap{width:100%;overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius-md)}table{width:100%;border-collapse:collapse;background:var(--paper)}th,td{padding:13px 14px;border-bottom:1px solid var(--line-soft);text-align:left;vertical-align:top}th{background:var(--inset);color:var(--navy-900);font-size:12px;font-weight:720;white-space:nowrap}td{color:var(--text-2);font-size:12.5px}tr:last-child td{border-bottom:0}td code,.inline-code{padding:2px 5px;border:1px solid var(--line);border-radius:4px;background:var(--inset);color:var(--blue-700);overflow-wrap:anywhere}
+    .status{display:inline-flex;align-items:center;min-height:24px;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:720;white-space:nowrap}.status.current{background:var(--green-100);color:var(--green-700)}.status.conditional{background:var(--amber-100);color:var(--amber-700)}.status.missing{background:var(--red-100);color:var(--red-700)}.status.info{background:var(--blue-100);color:var(--blue-700)}
+    .phase-list{display:grid;gap:12px}.phase{display:grid;grid-template-columns:82px minmax(0,1fr) 185px;gap:18px;padding:18px;border:1px solid var(--line);border-radius:var(--radius-md);background:var(--paper-raised)}.phase-no{color:var(--blue-700);font-size:13px;font-weight:760}.phase h4{font-size:16px}.phase p{margin:5px 0 0;font-size:13px}.phase-gate{padding-left:16px;border-left:1px solid var(--line)}.phase-gate strong{display:block;color:var(--teal-700);font-size:11px}.phase-gate span{display:block;margin-top:5px;color:var(--text-3);font-size:11px}
+    .architecture{width:100%;height:auto;margin-top:18px;border:1px solid var(--line);border-radius:var(--radius-md);background:var(--inset)}.arch-box{fill:var(--paper);stroke:var(--line);stroke-width:1}.arch-core{fill:var(--blue-100);stroke:var(--blue-600);stroke-width:1.3}.arch-data{fill:var(--teal-100);stroke:var(--teal-600);stroke-width:1.3}.arch-text{fill:var(--text-1);font:600 13px "Microsoft YaHei",sans-serif}.arch-sub{fill:var(--text-3);font:11px "Microsoft YaHei",sans-serif}.arch-line{stroke:var(--text-3);stroke-width:1.2;fill:none;marker-end:url(#arrow)}
+    .decision{display:grid;grid-template-columns:140px minmax(0,1fr);gap:16px;padding:16px 0;border-bottom:1px solid var(--line-soft)}.decision:last-child{border-bottom:0}.decision strong{color:var(--navy-900);font-size:13px}.decision p{margin:0;font-size:13px}
+    .back-to-top{position:fixed;right:22px;bottom:22px;z-index:20;opacity:0;pointer-events:none;transform:translateY(10px);transition:.18s}.back-to-top.visible{opacity:1;pointer-events:auto;transform:none}
+    @media(max-width:1120px){.mobile-bar{display:flex}.layout{display:block}.side-nav{position:fixed;top:70px;right:12px;z-index:40;width:min(340px,calc(100% - 24px));height:auto;max-height:calc(100vh - 84px);border:1px solid var(--line);border-radius:var(--radius-md);background:var(--paper);box-shadow:var(--shadow);opacity:0;pointer-events:none;transform:translateY(-8px)}body.nav-open .side-nav{opacity:1;pointer-events:auto;transform:none}.document{padding-top:16px}.grid-4,.metric-grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:760px){.cover{min-height:auto;padding:42px 24px}.cover::after{display:none}.system-rail,.grid-2,.grid-3,.grid-4,.metric-grid{grid-template-columns:1fr}.section{padding:28px 20px}.section-heading{grid-template-columns:42px 1fr}.section-index{width:40px;height:40px}.cover-footer{display:block}.cover-footer span{display:block;margin-top:5px}.phase{grid-template-columns:1fr}.phase-gate{padding:12px 0 0;border-top:1px solid var(--line);border-left:0}.decision{grid-template-columns:1fr;gap:5px}}
+    @media print{@page{size:A4;margin:13mm 12mm}html,body{background:#fff!important;color:#102a40!important;font-size:9.7pt}.mobile-bar,.side-nav,.back-to-top{display:none!important}.layout{display:block}.document{padding:0}.cover,.section{max-width:none;border:0;box-shadow:none;background:#fff}.cover{min-height:270mm;padding:22mm 10mm;break-after:page}.cover::after{opacity:.2}.section{margin:0;padding:10mm 0;border-radius:0;break-before:page}.section:first-of-type{break-before:auto}.section-heading,h2,h3,h4{break-after:avoid}.notice,.card,.metric,.phase,.architecture,tr{break-inside:avoid}.table-wrap{overflow:visible}thead{display:table-header-group}a{text-decoration:none;color:#102a40}.utility-button{display:none}}
+  </style>
+</head>
+<body>
+  <header class="mobile-bar">
+    <div class="mobile-title"><span>现代知识库系统演进方案</span></div>
+    <div class="mobile-actions"><button class="utility-button" id="navToggle" type="button" aria-label="打开目录">☰</button><button class="utility-button" id="themeToggle" type="button" aria-label="切换主题">◐</button></div>
+  </header>
+  <div class="layout">
+    <nav class="side-nav" aria-label="文档目录">
+      <div class="nav-heading"><strong>现代知识库系统</strong><small>演进方案 v0.1 · 2026-09-24 · 讨论稿</small></div>
+      <div class="nav-links">
+        <a class="nav-link active" href="#cover"><span class="nav-index">00</span><span>封面</span></a>
+        <a class="nav-link" href="#summary"><span class="nav-index">01</span><span>执行摘要</span></a>
+        <a class="nav-link" href="#baseline"><span class="nav-index">02</span><span>现状与演进原则</span></a>
+        <a class="nav-link" href="#architecture"><span class="nav-index">03</span><span>目标架构</span></a>
+        <a class="nav-link" href="#roadmap"><span class="nav-index">04</span><span>关键阶段节点</span></a>
+        <a class="nav-link" href="#retrieval"><span class="nav-index">05</span><span>检索与数据库决策</span></a>
+        <a class="nav-link" href="#evaluation"><span class="nav-index">06</span><span>评测体系</span></a>
+        <a class="nav-link" href="#studio"><span class="nav-index">07</span><span>全流程可视化</span></a>
+        <a class="nav-link" href="#memory"><span class="nav-index">08</span><span>记忆与会话压缩</span></a>
+        <a class="nav-link" href="#delivery"><span class="nav-index">09</span><span>交付、边界与风险</span></a>
+        <a class="nav-link" href="#sources"><span class="nav-index">10</span><span>技术雷达与来源</span></a>
+      </div>
+    </nav>
+
+    <main class="document">
+      <header class="cover" id="cover">
+        <div class="cover-content">
+          <div class="cover-kicker">TECHNICAL EVOLUTION PLAN · V0.1</div>
+          <h1>现代知识库系统演进方案</h1>
+          <p class="cover-subtitle">从已经跑通的 RAG MVP 出发，建立评测、可观测和可替换的技术基座，再用实验决定每一次升级。</p>
+          <p class="cover-purpose">本方案不把现有项目推倒重来。现有 Streamlit、Chroma、BM25、RRF 和会话摘要继续作为可运行基线；后续解析、切块、检索、生成和记忆能力均通过接口并行接入，并由统一评测集决定是否替换。</p>
+          <div class="cover-tags"><span class="cover-tag">已有 MVP</span><span class="cover-tag">评测先行</span><span class="cover-tag">全链路可观测</span><span class="cover-tag">渐进式重构</span><span class="cover-tag">可回退</span></div>
+        </div>
+        <div class="system-rail">
+          <div class="rail-node"><strong>起点</strong><span>现有系统持续可运行</span></div>
+          <div class="rail-node"><strong>主线</strong><span>基线 → 评测 → 实验 → 决策</span></div>
+          <div class="rail-node"><strong>目标</strong><span>多格式、混合检索、可解释</span></div>
+          <div class="rail-node"><strong>原则</strong><span>无证据，不替换</span></div>
+        </div>
+        <div class="cover-footer"><span>编制日期：2026-09-24</span><span>状态：方案讨论稿 · 当前阶段不修改业务代码</span></div>
+      </header>
+
+      <section class="section" id="summary">
+        <header class="section-heading"><span class="section-index">01</span><div><h2>执行摘要</h2><p class="section-lead">项目已经越过“能否跑通”的阶段，下一步应从功能堆叠转向可度量演进。</p></div></header>
+        <div class="notice success"><div><strong>核心路线</strong><p>保留现有 MVP 作为 baseline，先建立稳定标识、评测数据和全链路追踪，再逐层引入现代文档解析、结构化切块、原生混合检索、Rerank、多模态和长期记忆。任何替换都必须通过同一隐藏测试集。</p></div></div>
+        <div class="metric-grid">
+          <div class="metric"><strong>1 个基线</strong><span>现有系统冻结为对照组</span></div>
+          <div class="metric"><strong>8 个阶段</strong><span>每阶段都有验收门</span></div>
+          <div class="metric"><strong>3 类数据</strong><span>金标、合成、真实回流</span></div>
+          <div class="metric"><strong>0 次盲换</strong><span>技术选择必须有证据</span></div>
+        </div>
+        <h3>与传统 MVP 开发的区别</h3>
+        <div class="grid-2">
+          <article class="card"><span class="eyebrow">过去：0 → 1</span><h4>验证链路可行</h4><p>上传文本、切块、入库、召回、生成、显示答案。现有项目已经完成这一目标。</p></article>
+          <article class="card"><span class="eyebrow">现在：1 → 可验证演进</span><h4>验证系统是否真正更好</h4><p>需要可重复的数据集、指标、追踪、版本和决策记录，避免“重构完成但无法判断收益”。</p></article>
+        </div>
+      </section>
+
+      <section class="section" id="baseline">
+        <header class="section-heading"><span class="section-index">02</span><div><h2>现状与演进原则</h2><p class="section-lead">现有代码是资产，也是第一条可重复的实验基线。</p></div></header>
+        <div class="table-wrap"><table>
+          <thead><tr><th>层级</th><th>当前实现</th><th>状态判断</th><th>下一步</th></tr></thead>
+          <tbody>
+            <tr><td>界面</td><td>Streamlit 上传与对话</td><td><span class="status current">可运行基线</span></td><td>短期保留；Studio 成熟后再决定是否迁移 React/Next.js。</td></tr>
+            <tr><td>文档处理</td><td>面向法律文本的预处理和条文切块</td><td><span class="status conditional">领域专用</span></td><td>抽象统一文档模型，增加 Docling/MinerU 适配器。</td></tr>
+            <tr><td>向量检索</td><td>本地 Chroma</td><td><span class="status current">继续保留</span></td><td>作为 baseline，与新版 Chroma 原生 Hybrid、Qdrant 并行评测。</td></tr>
+            <tr><td>关键词检索</td><td>Python 内存字符级 BM25</td><td><span class="status missing">优先改进</span></td><td>改为持久化 sparse/BM25，统一过滤、版本与追踪。</td></tr>
+            <tr><td>融合</td><td>应用层手写 RRF</td><td><span class="status current">可作为对照</span></td><td>增加 Weighted RRF、DBSF、Rerank 实验。</td></tr>
+            <tr><td>记忆</td><td>会话摘要压缩</td><td><span class="status conditional">能力有限</span></td><td>演进为原始历史、工作、语义、情节和程序记忆。</td></tr>
+            <tr><td>评测与追踪</td><td>缺少统一评测集和阶段级 trace</td><td><span class="status missing">首要缺口</span></td><td>在更换核心组件前补齐。</td></tr>
+          </tbody>
+        </table></div>
+        <h3>五条不可破坏的原则</h3>
+        <div class="grid-3">
+          <article class="card"><span class="eyebrow">P-01</span><h4>Baseline 永远可运行</h4><p>新链路失败时可以切回旧链路，并可以重放同一评测。</p></article>
+          <article class="card"><span class="eyebrow">P-02</span><h4>原始资料不可丢</h4><p>原文件、解析结果、切块和索引分层保存；派生数据可重建。</p></article>
+          <article class="card"><span class="eyebrow">P-03</span><h4>稳定证据 ID</h4><p>评测绑定证据单元而不是某一版 chunk ID，允许安全更换切块算法。</p></article>
+          <article class="card"><span class="eyebrow">P-04</span><h4>接口隔离供应商</h4><p>Parser、Chunker、Embedding、VectorStore、Reranker、Generator 全部可替换。</p></article>
+          <article class="card"><span class="eyebrow">P-05</span><h4>先证明，再默认</h4><p>最新技术进入候选池；只有通过本地评测，才进入默认路径。</p></article>
+          <article class="card"><span class="eyebrow">P-06</span><h4>每次运行可复现</h4><p>记录模型、提示词、数据版本、索引快照、参数、代码提交和随机种子。</p></article>
+        </div>
+      </section>
+
+      <section class="section" id="architecture">
+        <header class="section-heading"><span class="section-index">03</span><div><h2>目标架构</h2><p class="section-lead">业务体验、知识处理、检索实验和评测观察分层，避免未来再次把所有逻辑绑在 Streamlit 页面中。</p></div></header>
+        <svg class="architecture" viewBox="0 0 1120 500" role="img" aria-labelledby="archTitle archDesc">
+          <title id="archTitle">现代知识库目标架构</title><desc id="archDesc">从多格式输入经过解析、统一文档模型、切块和索引进入检索、生成、记忆，并由可观测和评测控制面贯穿。</desc>
+          <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-3)"/></marker></defs>
+          <rect class="arch-box" x="34" y="58" rx="8" width="150" height="72"/><text class="arch-text" x="109" y="87" text-anchor="middle">多格式输入</text><text class="arch-sub" x="109" y="108" text-anchor="middle">PDF / Office / Web / AV</text>
+          <rect class="arch-core" x="228" y="58" rx="8" width="160" height="72"/><text class="arch-text" x="308" y="87" text-anchor="middle">解析适配层</text><text class="arch-sub" x="308" y="108" text-anchor="middle">Docling / MinerU</text>
+          <rect class="arch-core" x="432" y="58" rx="8" width="160" height="72"/><text class="arch-text" x="512" y="87" text-anchor="middle">统一文档模型</text><text class="arch-sub" x="512" y="108" text-anchor="middle">结构 / 坐标 / 版本</text>
+          <rect class="arch-core" x="636" y="58" rx="8" width="160" height="72"/><text class="arch-text" x="716" y="87" text-anchor="middle">切块实验层</text><text class="arch-sub" x="716" y="108" text-anchor="middle">结构 / 层级 / 语义</text>
+          <rect class="arch-data" x="840" y="58" rx="8" width="246" height="72"/><text class="arch-text" x="963" y="87" text-anchor="middle">索引与数据层</text><text class="arch-sub" x="963" y="108" text-anchor="middle">PostgreSQL · Object · Vector · Graph</text>
+          <path class="arch-line" d="M184 94 H224"/><path class="arch-line" d="M388 94 H428"/><path class="arch-line" d="M592 94 H632"/><path class="arch-line" d="M796 94 H836"/>
+          <rect class="arch-box" x="840" y="205" rx="8" width="246" height="82"/><text class="arch-text" x="963" y="236" text-anchor="middle">召回与排序</text><text class="arch-sub" x="963" y="258" text-anchor="middle">Dense + Sparse + Fusion + Rerank</text>
+          <rect class="arch-box" x="560" y="205" rx="8" width="210" height="82"/><text class="arch-text" x="665" y="236" text-anchor="middle">上下文构建</text><text class="arch-sub" x="665" y="258" text-anchor="middle">父子恢复 · 去重 · Token 预算</text>
+          <rect class="arch-box" x="280" y="205" rx="8" width="210" height="82"/><text class="arch-text" x="385" y="236" text-anchor="middle">生成与引用</text><text class="arch-sub" x="385" y="258" text-anchor="middle">Qwen3.8 · Claim → Evidence</text>
+          <rect class="arch-box" x="34" y="205" rx="8" width="176" height="82"/><text class="arch-text" x="122" y="236" text-anchor="middle">应用体验</text><text class="arch-sub" x="122" y="258" text-anchor="middle">Chat · Search · Admin</text>
+          <path class="arch-line" d="M963 130 V201"/><path class="arch-line" d="M840 246 H774"/><path class="arch-line" d="M560 246 H494"/><path class="arch-line" d="M280 246 H214"/>
+          <rect class="arch-data" x="34" y="365" rx="8" width="516" height="92"/><text class="arch-text" x="292" y="398" text-anchor="middle">评测与实验控制面</text><text class="arch-sub" x="292" y="421" text-anchor="middle">Dataset · Experiment · Regression · Decision Gate</text><text class="arch-sub" x="292" y="441" text-anchor="middle">解析 / 切块 / 召回 / 生成 / 记忆分层指标</text>
+          <rect class="arch-data" x="570" y="365" rx="8" width="516" height="92"/><text class="arch-text" x="828" y="398" text-anchor="middle">可观测与记忆控制面</text><text class="arch-sub" x="828" y="421" text-anchor="middle">OpenTelemetry · OpenInference · Trace · Cost · Version</text><text class="arch-sub" x="828" y="441" text-anchor="middle">工作 / 语义 / 情节 / 程序记忆与来源</text>
+          <path class="arch-line" d="M292 361 V318 H512 V134"/><path class="arch-line" d="M828 361 V318 H665 V291"/>
+        </svg>
+        <div class="notice warning" style="margin-top:18px"><div><strong>架构边界</strong><p>Vector DB 不保存全部业务真相。原始文件进入对象存储，文档版本、权限和任务状态进入 PostgreSQL；向量数据库只保存面向检索的派生表示，并可随时重建。</p></div></div>
+      </section>
+
+      <section class="section" id="roadmap">
+        <header class="section-heading"><span class="section-index">04</span><div><h2>关键阶段节点</h2><p class="section-lead">阶段按依赖顺序推进，不强行按日历排期。每个节点都产生可查看的成果和明确的继续条件。</p></div></header>
+        <div class="phase-list">
+          <article class="phase"><div class="phase-no">M0<br>BASELINE</div><div><h4>冻结现有 MVP 基线</h4><p>记录当前代码提交、依赖、配置、测试文档、典型问题、输出、延迟和成本。修复阻止复现的问题，但不优化算法。</p></div><div class="phase-gate"><strong>出口条件</strong><span>同一环境可重复启动；固定问题可重复运行；结果和 trace 可保存。</span></div></article>
+          <article class="phase"><div class="phase-no">M1<br>EVAL CORE</div><div><h4>建立最小评测闭环</h4><p>先做一批人工金标问题，覆盖事实、精确词、多跳、无答案、表格和多轮追问；建立 stable evidence unit。</p></div><div class="phase-gate"><strong>出口条件</strong><span>一条命令运行 baseline；生成召回、答案、引用、延迟和成本报告。</span></div></article>
+          <article class="phase"><div class="phase-no">M2<br>INGESTION</div><div><h4>统一文档模型与多格式入口</h4><p>保存原文件，引入 Parser 接口；并行测试 Docling 与 MinerU；统一标题、段落、表格、图片、公式、页码和坐标。</p></div><div class="phase-gate"><strong>出口条件</strong><span>选定格式可入库；解析结果可视；失败可重试；所有派生数据可重建。</span></div></article>
+          <article class="phase"><div class="phase-no">M3<br>CHUNK LAB</div><div><h4>建立切块实验室</h4><p>实现结构切块、Parent–Child、Sentence Window；Semantic/Late Chunking 作为候选。评测绑定证据单元而非 chunk ID。</p></div><div class="phase-gate"><strong>出口条件</strong><span>至少三种策略可并行运行；切块边界和父子关系可视化；有分项评测。</span></div></article>
+          <article class="phase"><div class="phase-no">M4<br>RETRIEVAL</div><div><h4>检索锦标赛与数据库决策</h4><p>对比当前 Chroma + 内存 BM25、新版 Chroma Hybrid、Qdrant Hybrid；随后增加 Reranker 和多向量候选。</p></div><div class="phase-gate"><strong>出口条件</strong><span>完成隐藏集对比；形成 Chroma/Qdrant ADR；迁移必须有可量化收益。</span></div></article>
+          <article class="phase"><div class="phase-no">M5<br>ANSWER</div><div><h4>上下文构建、回答与引用</h4><p>引入去重、父块恢复、Token 预算、证据充分性检查、拒答和 Claim → Evidence 引用校验；生成模型保持可插拔。</p></div><div class="phase-gate"><strong>出口条件</strong><span>回答可追溯到页/块；支持无答案；生成质量不掩盖召回问题。</span></div></article>
+          <article class="phase"><div class="phase-no">M6<br>RAG STUDIO</div><div><h4>全流程可视化工作台</h4><p>展示解析页面、文档树、切块、各路召回、融合、重排、上下文、答案引用、实验差异和回归。</p></div><div class="phase-gate"><strong>出口条件</strong><span>无需查看日志即可定位一次错误发生在哪一阶段。</span></div></article>
+          <article class="phase"><div class="phase-no">M7<br>MEMORY</div><div><h4>分层记忆与会话压缩</h4><p>在原始历史之上增加工作、语义、情节和程序记忆；记录来源、时间、置信度、冲突和删除状态。</p></div><div class="phase-gate"><strong>出口条件</strong><span>通过更新、冲突、时序、遗忘、跨会话和摘要失真测试。</span></div></article>
+          <article class="phase"><div class="phase-no">M8<br>HARDENING</div><div><h4>平台化和生产加固</h4><p>补齐租户、权限、队列、限流、备份、数据生命周期、安全、成本预算和回滚；再决定替换 Streamlit。</p></div><div class="phase-gate"><strong>出口条件</strong><span>达到约定 SLO；灾备演练通过；版本升级和回滚流程明确。</span></div></article>
+        </div>
+        <h3>关键依赖</h3>
+        <div class="notice"><div><strong>M1 是全路线的真正起点</strong><p>没有 M1 的评测闭环，M2—M8 的“优化”都无法被可靠验证。可视化的 trace 骨架也应在早期建立，不应等前端阶段才补。</p></div></div>
+      </section>
+
+      <section class="section" id="retrieval">
+        <header class="section-heading"><span class="section-index">05</span><div><h2>检索与数据库决策</h2><p class="section-lead">Chroma 是否替换为 Qdrant 被纳入正式决策门；当前不预设替换结果。</p></div></header>
+        <h3>候选实验矩阵</h3>
+        <div class="table-wrap"><table>
+          <thead><tr><th>编号</th><th>检索链路</th><th>目的</th><th>成熟度</th></tr></thead>
+          <tbody>
+            <tr><td>R0</td><td>当前 Chroma Dense + Python 字符 BM25 + RRF</td><td>冻结原始表现</td><td><span class="status current">Baseline</span></td></tr>
+            <tr><td>R1</td><td>新版 Chroma 原生 Dense + Sparse + RRF</td><td>评估不换数据库能否消除内存 BM25</td><td><span class="status info">Candidate</span></td></tr>
+            <tr><td>R2</td><td>Qdrant Dense + Sparse + Weighted RRF/DBSF</td><td>统一索引、过滤与融合</td><td><span class="status info">Candidate</span></td></tr>
+            <tr><td>R3</td><td>R1/R2 + Text Reranker</td><td>验证两阶段召回排序</td><td><span class="status info">Candidate</span></td></tr>
+            <tr><td>R4</td><td>Qdrant Hybrid + ColBERT/MultiVector</td><td>学习 Late Interaction 并验证收益</td><td><span class="status conditional">Experimental</span></td></tr>
+            <tr><td>R5</td><td>Hybrid + Query Rewrite/Decompose + Sufficiency Check</td><td>处理模糊、多跳和召回不足</td><td><span class="status conditional">Experimental</span></td></tr>
+            <tr><td>R6</td><td>Graph Retrieval</td><td>只针对跨文档关系和多跳问题</td><td><span class="status conditional">按需启用</span></td></tr>
+          </tbody>
+        </table></div>
+        <h3>Qdrant 替换门槛</h3>
+        <div class="grid-2">
+          <article class="card"><span class="eyebrow">GO</span><h4>满足以下条件才迁移</h4><p>在关键 query slice 上显著提升；统一 Sparse/Dense 后消除一致性问题；多向量或服务化确有需求；额外延迟、资源和运维成本可接受。</p></article>
+          <article class="card"><span class="eyebrow">NO-GO</span><h4>以下情况继续使用 Chroma</h4><p>新版 Chroma 已满足需求；Qdrant 准确率无显著收益；数据规模小且单机为主；多向量只增加复杂度；团队暂不希望维护独立服务。</p></article>
+        </div>
+        <div class="decision"><strong>决策记录 ADR</strong><p>输出数据版本、模型、参数、Recall@k、MRR、nDCG、端到端正确率、P50/P95、索引体积、峰值内存、部署与备份复杂度，以及最终选择和回退方案。</p></div>
+      </section>
+
+      <section class="section" id="evaluation">
+        <header class="section-heading"><span class="section-index">06</span><div><h2>评测体系</h2><p class="section-lead">评测不是最后验收，而是系统的控制平面；每个阶段都拥有自己的指标和失败样本。</p></div></header>
+        <h3>数据集组成</h3>
+        <div class="grid-3">
+          <article class="card"><span class="eyebrow">GOLD</span><h4>人工金标</h4><p>真实文档、稳定证据单元、参考答案、必需与禁止 Claim、是否可回答；双人标注并裁决。</p></article>
+          <article class="card"><span class="eyebrow">SYNTHETIC</span><h4>合成覆盖</h4><p>按 persona、难度、答案类型、单跳/多跳和格式扩充；必须抽样人工校验。</p></article>
+          <article class="card"><span class="eyebrow">LIVE</span><h4>真实回流</h4><p>线上问题脱敏、聚类、标注后进入回归集；负责发现实验室未覆盖的失败模式。</p></article>
+        </div>
+        <h3>分层指标</h3>
+        <div class="table-wrap"><table>
+          <thead><tr><th>层级</th><th>核心指标</th><th>主要回答的问题</th></tr></thead>
+          <tbody>
+            <tr><td>解析</td><td>文字、阅读顺序、层级、表格、公式、页码坐标</td><td>知识是否在入库前已经丢失或错位？</td></tr>
+            <tr><td>切块</td><td>证据包含率、边界质量、重复率、父块恢复率</td><td>证据能否被独立找到，又能恢复完整上下文？</td></tr>
+            <tr><td>召回</td><td>Recall@k、MRR、nDCG、全证据召回率</td><td>正确证据有没有进入候选集，排名在哪里？</td></tr>
+            <tr><td>生成</td><td>Claim 正确性、Faithfulness、引用精确率/召回率、拒答</td><td>模型是否只根据证据回答并正确标注出处？</td></tr>
+            <tr><td>端到端</td><td>任务成功率、人工偏好、延迟、Token、成本</td><td>用户是否真正获得有用结果？</td></tr>
+            <tr><td>记忆</td><td>保留、更新、时序、冲突、遗忘、隐私删除、摘要失真</td><td>跨会话是否记得该记的，同时忘掉该忘的？</td></tr>
+          </tbody>
+        </table></div>
+        <h3>评测有效性门槛</h3>
+        <ul>
+          <li>按文档或来源划分开发集与隐藏测试集，防止同源泄漏。</li>
+          <li>LLM Judge 只做自动辅助，必须在人工标注样本上校准；回答模型与 Judge 尽量隔离。</li>
+          <li>报告置信区间和问题类型切片，不能只比较一个平均分。</li>
+          <li>加入同义改写、噪声、无答案、提示注入和文档版本变化等扰动测试。</li>
+          <li>评测集需要能区分候选系统；所有方案都接近满分时，应提高难度而不是宣布成功。</li>
+        </ul>
+      </section>
+
+      <section class="section" id="studio">
+        <header class="section-heading"><span class="section-index">07</span><div><h2>全流程可视化</h2><p class="section-lead">目标不是简单增加一个 Dashboard，而是让一次答案能够从结果反向追溯到原始文件和每个算法决策。</p></div></header>
+        <div class="grid-2">
+          <article class="card"><span class="eyebrow">INGESTION VIEW</span><h4>文档处理视图</h4><p>原页面与解析树并排；展示 OCR、标题、表格、图片、坐标、警告、解析器版本和耗时。</p></article>
+          <article class="card"><span class="eyebrow">CHUNK VIEW</span><h4>切块实验视图</h4><p>显示 chunk 边界、Token、父子、前后文、metadata、证据 ID 和不同策略差异。</p></article>
+          <article class="card"><span class="eyebrow">QUERY TRACE</span><h4>查询追踪视图</h4><p>查询分类、改写、各路候选与分数、融合、Rerank、上下文打包、答案 Claim 和引用。</p></article>
+          <article class="card"><span class="eyebrow">EXPERIMENT</span><h4>实验与回归视图</h4><p>并排比较两次实验；突出提升、退化、失败样本、成本、延迟和受影响 query slice。</p></article>
+          <article class="card"><span class="eyebrow">MEMORY</span><h4>记忆时间线</h4><p>查看写入、更新、冲突、失效、召回和被压缩的记忆，并可回到原始消息。</p></article>
+          <article class="card"><span class="eyebrow">OPERATIONS</span><h4>运行与数据质量</h4><p>任务队列、索引状态、失败重试、版本分布、解析质量、资源、Token 和预算。</p></article>
+        </div>
+        <h3>实现边界</h3>
+        <p>追踪数据采用 OpenTelemetry/OpenInference 语义，后端可先接 Phoenix 或 Langfuse；业务专属的文档、切块和证据视图由自己的 RAG Studio 提供。这样既利用成熟工具，又不把核心数据模型绑定到某一家平台。</p>
+      </section>
+
+      <section class="section" id="memory">
+        <header class="section-heading"><span class="section-index">08</span><div><h2>记忆与会话压缩</h2><p class="section-lead">记忆作为独立子系统建设；不再用一段不可追溯的滚动摘要替代全部历史。</p></div></header>
+        <div class="table-wrap"><table>
+          <thead><tr><th>层级</th><th>内容</th><th>存储与策略</th><th>关键测试</th></tr></thead>
+          <tbody>
+            <tr><td>原始历史</td><td>消息、工具调用、检索结果</td><td>不可由摘要覆盖；支持权限、保留期和删除</td><td>完整性、删除传播</td></tr>
+            <tr><td>工作记忆</td><td>最近消息、当前目标、未完成事项</td><td>结构化状态 + 最近原文窗口</td><td>任务连续性、指代</td></tr>
+            <tr><td>语义记忆</td><td>稳定事实、偏好、身份和约束</td><td>来源、时间、置信度、TTL、版本</td><td>更新、冲突、过期</td></tr>
+            <tr><td>情节记忆</td><td>任务、决定、行动和结果</td><td>事件摘要链接原始 trace</td><td>跨会话、多跳、时序</td></tr>
+            <tr><td>程序记忆</td><td>工作规则、工具习惯、响应方式</td><td>显式规则与可审计版本</td><td>一致性、越权和错误固化</td></tr>
+          </tbody>
+        </table></div>
+        <h3>压缩流程</h3>
+        <div class="decision"><strong>保留最近原文</strong><p>高保真短窗口用于当前推理，不先压缩最近关键消息。</p></div>
+        <div class="decision"><strong>提取结构化状态</strong><p>单独保存目标、决定、约束、实体、时间和开放问题，而不是只写自然语言摘要。</p></div>
+        <div class="decision"><strong>分层情节摘要</strong><p>较旧会话形成可合并摘要，但每条摘要保留原消息 ID 和时间范围。</p></div>
+        <div class="decision"><strong>按需取回</strong><p>依据查询使用 Dense、Sparse、实体和时间信号召回“足够的记忆”，而不是塞入全部历史。</p></div>
+        <div class="notice warning" style="margin-top:18px"><div><strong>实施顺序</strong><p>记忆依赖稳定 trace、数据版本和评测框架，因此放在 M7。可以提前设计数据结构，但不应在召回和评测尚未稳定时大规模实现。</p></div></div>
+      </section>
+
+      <section class="section" id="delivery">
+        <header class="section-heading"><span class="section-index">09</span><div><h2>交付、边界与风险</h2><p class="section-lead">每阶段交付可运行增量，控制重构范围，并保留旧路径直到新路径通过验收。</p></div></header>
+        <h3>每个阶段的标准交付件</h3>
+        <div class="grid-4">
+          <article class="card"><span class="eyebrow">CODE</span><h4>可运行实现</h4><p>接口、适配器、迁移和回退开关。</p></article>
+          <article class="card"><span class="eyebrow">DATA</span><h4>版本化数据</h4><p>样本、索引配置、运行产物和来源。</p></article>
+          <article class="card"><span class="eyebrow">EVIDENCE</span><h4>实验报告</h4><p>指标、切片、失败案例、成本和结论。</p></article>
+          <article class="card"><span class="eyebrow">DECISION</span><h4>ADR</h4><p>接受、继续实验或拒绝，以及触发重评条件。</p></article>
+        </div>
+        <h3>主要风险与控制</h3>
+        <div class="table-wrap"><table>
+          <thead><tr><th>风险</th><th>典型表现</th><th>控制方式</th></tr></thead>
+          <tbody>
+            <tr><td>技术追新</td><td>组件频繁更换，结果没有可比性</td><td>技术雷达分 Production/Candidate/Experimental；默认链路保持稳定。</td></tr>
+            <tr><td>一次性重构</td><td>长时间不可运行，错误来源不明</td><td>旁路适配器、Feature Flag、双写/重放、逐阶段验收。</td></tr>
+            <tr><td>评测污染</td><td>调参过度拟合少量公开题</td><td>文档级隔离、隐藏测试、真实回流、统计置信区间。</td></tr>
+            <tr><td>解析静默错误</td><td>回答错误被误判成模型问题</td><td>解析独立指标、原文对照和坐标级引用。</td></tr>
+            <tr><td>记忆污染</td><td>错误事实被长期保存并反复使用</td><td>候选记忆验证、冲突检测、来源、TTL、撤销和删除测试。</td></tr>
+            <tr><td>成本失控</td><td>多阶段、多向量、Judge 导致调用激增</td><td>逐阶段预算、离线缓存、按 query 路由、高成本能力默认非全量启用。</td></tr>
+          </tbody>
+        </table></div>
+        <h3>当前明确不做</h3>
+        <ul>
+          <li>不因为“更现代”立即删除 Chroma 或 Streamlit。</li>
+          <li>不在没有评测集时引入 GraphRAG、Agentic RAG 或复杂多向量作为默认路径。</li>
+          <li>不把向量数据库当作原始文档、权限和版本的唯一事实来源。</li>
+          <li>不以单个公开榜单或厂商自报数字作为技术选择依据。</li>
+        </ul>
+      </section>
+
+      <section class="section" id="sources">
+        <header class="section-heading"><span class="section-index">10</span><div><h2>技术雷达与信息来源</h2><p class="section-lead">所有外部能力以 2026-09-24 可核验的一手资料为准；版本变化时重新进入候选评测。</p></div></header>
+        <div class="table-wrap"><table>
+          <thead><tr><th>主题</th><th>当前定位</th><th>核验来源</th></tr></thead>
+          <tbody>
+            <tr><td>Qwen3.8</td><td>生成模型候选；Embedding/Reranker 独立选型</td><td><a href="https://github.com/QwenLM/Qwen3.8">Qwen3.8 官方仓库</a> · <a href="https://help.aliyun.com/zh/model-studio/embedding-rerank-model">Embedding/Rerank 官方目录</a></td></tr>
+            <tr><td>Docling</td><td>通用解析 Production Candidate</td><td><a href="https://docling-project.github.io/docling/usage/supported_formats/">官方格式支持</a></td></tr>
+            <tr><td>MinerU 4</td><td>复杂中文 PDF 重点 Candidate，因发布较新需本地验证</td><td><a href="https://github.com/opendatalab/MinerU/releases">官方 Releases</a></td></tr>
+            <tr><td>Chroma</td><td>保留 baseline；评测新版原生 Hybrid</td><td><a href="https://docs.trychroma.com/docs/overview/architecture">官方架构</a> · <a href="https://www.trychroma.com/project/sparse-vector-search">Sparse/Hybrid</a></td></tr>
+            <tr><td>Qdrant</td><td>高级检索 Candidate，不预设替换</td><td><a href="https://qdrant.tech/documentation/search/hybrid-queries/">Hybrid / Multi-stage Query</a> · <a href="https://qdrant.tech/documentation/manage-data/points/">向量类型</a></td></tr>
+            <tr><td>评测</td><td>人工金标为核心，自动指标为辅助</td><td><a href="https://arxiv.org/abs/2408.08067">RAGChecker</a> · <a href="https://arxiv.org/abs/2410.12248">CoFE-RAG</a> · <a href="https://docs.ragas.io/en/stable/concepts/test_data_generation/rag/">Ragas Testset</a></td></tr>
+            <tr><td>可观测</td><td>采用开放语义和可替换后端</td><td><a href="https://github.com/Arize-ai/openinference/blob/main/spec/semantic_conventions.md">OpenInference</a> · <a href="https://arize.com/docs/phoenix/">Phoenix</a></td></tr>
+            <tr><td>记忆</td><td>分层架构；公开基准只做外部参照</td><td><a href="https://arxiv.org/abs/2410.10813">LongMemEval</a> · <a href="https://aclanthology.org/2026.acl-long.1150/">LoCoMo-Plus</a> · <a href="https://arxiv.org/abs/2609.19877">JustMem</a></td></tr>
+          </tbody>
+        </table></div>
+        <h3>后续维护规则</h3>
+        <p>技术条目记录名称、版本、发布日期、核验日期、官方来源、论文、许可证、成熟度、已知限制和本项目实验结果。最新技术只获得“进入候选池”的资格；通过隐藏测试集和运维评估后，才可能成为默认方案。</p>
+        <div class="notice success"><div><strong>下一次讨论建议</strong><p>先细化 M0 和 M1：确定现有 baseline 的冻结内容、第一批文档样本、问题分类、gold evidence 数据结构以及首版验收阈值。这会决定后面所有技术实验是否可信。</p></div></div>
+      </section>
+    </main>
+  </div>
+  <button class="utility-button back-to-top" id="backToTop" type="button" aria-label="返回顶部">↑</button>
+  <script>
+    const body=document.body,navToggle=document.getElementById('navToggle'),themeToggle=document.getElementById('themeToggle'),backToTop=document.getElementById('backToTop');
+    navToggle?.addEventListener('click',()=>body.classList.toggle('nav-open'));
+    themeToggle?.addEventListener('click',()=>{const dark=body.dataset.theme==='dark';body.dataset.theme=dark?'light':'dark';localStorage.setItem('kb-plan-theme',body.dataset.theme)});
+    const saved=localStorage.getItem('kb-plan-theme');if(saved)body.dataset.theme=saved;
+    const links=[...document.querySelectorAll('.nav-link')],sections=links.map(a=>document.querySelector(a.getAttribute('href'))).filter(Boolean);
+    const observer=new IntersectionObserver(entries=>{const hit=entries.filter(e=>e.isIntersecting).sort((a,b)=>b.intersectionRatio-a.intersectionRatio)[0];if(!hit)return;links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+hit.target.id))},{rootMargin:'-20% 0px -65%',threshold:[0,.2,.6]});
+    sections.forEach(s=>observer.observe(s)); links.forEach(a=>a.addEventListener('click',()=>body.classList.remove('nav-open')));
+    addEventListener('scroll',()=>backToTop.classList.toggle('visible',scrollY>600),{passive:true}); backToTop.addEventListener('click',()=>scrollTo({top:0,behavior:'smooth'}));
+  </script>
+</body>
+</html>

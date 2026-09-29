@@ -8,6 +8,28 @@ env/
 venv/
 logs/
 
+# 正式知识库运行数据；只提交目录说明和占位文件。
+storage/*
+!storage/README.md
+!storage/sources/
+!storage/parsed/
+!storage/assets/
+!storage/chunks/
+!storage/indexes/
+!storage/evaluations/
+storage/sources/*
+storage/parsed/*
+storage/assets/*
+storage/chunks/*
+storage/indexes/*
+storage/evaluations/*
+!storage/sources/.gitkeep
+!storage/parsed/.gitkeep
+!storage/assets/.gitkeep
+!storage/chunks/.gitkeep
+!storage/indexes/.gitkeep
+!storage/evaluations/.gitkeep
+
 # 环境配置（含密钥）
 .env
 

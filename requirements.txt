@@ -50,8 +50,12 @@ tqdm>=4.66.0
 pypdf>=4.0.0
 # Word文档解析（后续扩展支持docx文件上传入库）
 python-docx>=1.1.0
+# PowerPoint文档原生结构校验（幻灯片、文本框、表格）
+python-pptx>=1.0.0
 # Excel文档解析（后续扩展支持xlsx文件上传入库）
 openpyxl>=3.1.2
+# PDF页面渲染与异常页多模态复核
+PyMuPDF>=1.24.0
 # Markdown文档解析（后续扩展支持md文件上传入库）
 markdown>=3.5.2
 # 异步性能优化
