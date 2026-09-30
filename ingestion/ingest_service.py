@@ -1,10 +1,8 @@
 import hashlib
 import os
 
-from langchain_chroma import Chroma
-from langchain_community.embeddings import DashScopeEmbeddings
-
 from core import config
+from infra.vector_store import VectorStoreService
 from ingestion.legal_chunker import build_chunks_from_article_units, parse_legal_article_units
 from ingestion.legal_preprocess import preprocess_legal_text
 
@@ -49,14 +47,8 @@ def get_string_md5(input_str: str, encoding="utf-8"):
 class KnowledgeBaseService:
 	"""知识库入库服务。"""
 
-	def __init__(self):
-		os.makedirs(config.persist_directory, exist_ok=True)
-
-		self.chroma = Chroma(
-			collection_name=config.collection_name,
-			embedding_function=DashScopeEmbeddings(model=config.embedding_model_name),
-			persist_directory=config.persist_directory,
-		)
+	def __init__(self, vector_service: VectorStoreService | None = None):
+		self.vector_service = vector_service or VectorStoreService()
 		self.chunk_size = config.chunk_size
 		self.chunk_overlap_articles = config.chunk_overlap_articles
 
@@ -81,10 +73,10 @@ class KnowledgeBaseService:
 			metadata["source"] = filename
 
 		add_texts_in_batches(
-			self.chroma,
+			self.vector_service,
 			knowledge_chunks,
 			metadata_list,
-			batch_size=10,
+			batch_size=config.embedding_batch_size,
 		)
 		save_md5(md5_hex)
 		return "[Success]内容已经成功载入向量库"

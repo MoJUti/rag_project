@@ -87,11 +87,19 @@ class EvaluationStorageLayout:
         return self.root / "chunks"
 
     @property
+    def embeddings(self) -> Path:
+        return self.root / "embeddings"
+
+    @property
+    def indexes(self) -> Path:
+        return self.root / "indexes"
+
+    @property
     def reports(self) -> Path:
         return self.root / "reports"
 
     def ensure(self) -> None:
-        for path in (self.parsed, self.assets, self.chunks, self.reports):
+        for path in (self.parsed, self.assets, self.chunks, self.embeddings, self.indexes, self.reports):
             path.mkdir(parents=True, exist_ok=True)
 
 

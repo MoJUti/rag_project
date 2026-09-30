@@ -4,7 +4,6 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_community.chat_models.tongyi import ChatTongyi
-from langchain_community.embeddings import DashScopeEmbeddings
 from langchain.chat_models import init_chat_model
 
 from core import config
@@ -22,9 +21,7 @@ def _print_prompt(prompt):
 
 class RagService:
     def __init__(self):
-        self.vector_service = VectorStoreService(
-            embedding=DashScopeEmbeddings(model=config.embedding_model_name)
-        )
+        self.vector_service = VectorStoreService()
         self.prompt_template = ChatPromptTemplate.from_messages(
             [
                 (

@@ -41,7 +41,8 @@ storage/evaluations/*
 *.bin
 *.pt
 *.pth
-chroma_db/          # Chroma 本地数据库
+# Chroma 本地数据库（运行数据不提交）
+chroma_db/
 
 md5.text
 
