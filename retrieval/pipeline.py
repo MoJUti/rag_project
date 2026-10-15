@@ -65,7 +65,7 @@ class RetrievalPipeline:
     """插件通过统一输入输出组合；每次请求独立记录，不共享调试状态。"""
 
     retriever: CandidateRetriever
-    final_k: int = 6
+    final_k: int = 10
     candidate_k: int = 40
     max_queries: int = 4
     rerank_strategy: str = "none"

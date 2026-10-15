@@ -1,0 +1,163 @@
+{
+  "version": "node7-evidence-diagnostic-v1",
+  "experiment_sha256": "40d575b537eb0a6aebdd8db27cef74a0571fd7b611ea1662ffc450c6ef4a45d5",
+  "report_content_sha256": "a648a579a31b890277ab4c361e5544f9b69e75a2178686097ad0253f041c78f6",
+  "reviewer": "本次助手复核，非独立人类评审；事后选择问题样本，不用作盲测或全量新评分",
+  "evidence_cases": {
+    "omni-05-01": {
+      "scope_note": "原图标注的卦名，仅核对文本是否保留；未重新识别图片，不把缺字自动归因为某个解析器。",
+      "requirements": [
+        {"id": "本卦", "document_ids": ["omnidoc-05"], "alternatives": [{"quote": "山风蛊"}]},
+        {"id": "变卦", "document_ids": ["omnidoc-05"], "alternatives": [{"quote": "火泽睽"}]}
+      ]
+    },
+    "omni-09-01": {
+      "scope_note": "表号和名称必须是同一连续片段，不能只找到地图二字。",
+      "requirements": [{"id": "表80名称", "document_ids": ["omnidoc-09"], "alternatives": [{"quote": "表80 影像地图质量错漏分类表"}]}]
+    },
+    "ret-te-2013-01": {
+      "scope_note": "三个产品分别核对机构、产品和金额所在连续行；沿用原题“以上含等于”的既有说明。",
+      "requirements": [
+        {"id": "中银2023041", "document_ids": ["tableeval-2013"], "alternatives": [{"quote": "中国银行哈尔滨香坊支行 | （机构专属）中银理财-稳享(封闭式)2023041 | 固定收益类非保本浮动收益型 | 60,000.00"}]},
+        {"id": "浦发24JG3305", "document_ids": ["tableeval-2013"], "alternatives": [{"quote": "上海浦东发展银行哈尔滨分行营业部 | 利多多公司稳利24JG3305期（月月滚利2期特供款） | 保本浮动收益型 | 100,000.00"}]},
+        {"id": "浦发24JG6066", "document_ids": ["tableeval-2013"], "alternatives": [{"quote": "上海浦东发展银行哈尔滨分行营业部 | 利多多公司稳利24JG6066期(三层看涨)人民币对公结构性存款 | 保本浮动收益型 | 50,000.00"}]}
+      ]
+    },
+    "wb-192-01-01": {
+      "scope_note": "只核对营业收入数值与年度报告披露列；该块货币单位的适用范围仍需单独复核，不能据此宣布完整引用支持。",
+      "requirements": [{"id": "营业收入年度报告值", "document_ids": ["workspace-192-01"], "alternatives": [{"quote": "营业收入462,903,179.20", "context": ["年度报告披露值", "2024年度"]}]}]
+    },
+    "wb-192-01-02": {
+      "scope_note": "保留公司名称与法定代表人字段，不要求整页联系方式都被召回。",
+      "requirements": [{"id": "法定代表人", "document_ids": ["workspace-192-01"], "alternatives": [{"quote": "法定代表人 | 周宏", "context": ["武汉宏海科技股份有限公司"]}]}]
+    },
+    "wb-192-02-01": {
+      "scope_note": "在同一句中保留公司、交易所、日期和正式上市事件。",
+      "requirements": [{"id": "上市日", "document_ids": ["workspace-192-02"], "alternatives": [{"quote": "2024年8月22日，公司股票“太湖远大”正式在北京证券交易所上市交易"}]}]
+    },
+    "wb-192-02-02": {
+      "scope_note": "法定代表人字段和公司名来自同一块。",
+      "requirements": [{"id": "法定代表人", "document_ids": ["workspace-192-02"], "alternatives": [{"quote": "法定代表人 | 俞丽琴", "context": ["浙江太湖远大新材料股份有限公司"]}]}]
+    },
+    "wb-328-01-02": {
+      "scope_note": "新员工到岗率的指标与数值连续出现，不能用另一报告的单岗位到岗率代替。",
+      "requirements": [{"id": "新员工到岗率", "document_ids": ["workspace-328-01"], "alternatives": [{"quote": "新员工到岗率为71.4%"}]}]
+    },
+    "wb-328-03-02": {
+      "scope_note": "同一块保留指标类别与2024年的比例，不能混用2023年79.46%。",
+      "requirements": [{"id": "2024本科及以上占比", "document_ids": ["workspace-328-03"], "alternatives": [{"quote": "2024年占比88.20%", "context": ["本科及以上人员数量所占比例"]}]}]
+    },
+    "wb-340-01-02": {
+      "scope_note": "需要四位寿星与财务部在同一句，而不是整页标题、装饰词。",
+      "requirements": [{"id": "寿星部门", "document_ids": ["workspace-340-01"], "alternatives": [{"quote": "今天的寿星是来自财务部的4位小伙伴"}]}]
+    },
+    "wb-354-01-01": {
+      "scope_note": "愿景短句与愿景标识，不要求整张战略屋被单块保留。",
+      "requirements": [{"id": "愿景", "document_ids": ["workspace-354-01"], "alternatives": [{"quote": "打造“高效、规范、安全”的行政体系，成为公司战略落地的核心支撑", "context": ["愿景"]}]}]
+    },
+    "wb-354-01-02": {
+      "scope_note": "六大模块完整列举，允许Markdown强调与换行差异，不允许少一个名称。",
+      "requirements": [{"id": "六大模块", "document_ids": ["workspace-354-01"], "alternatives": [{"quote": "流程制度管理 会务外联管理 文印资质管理 档案资料管理 采购资产管理 后勤安保管理", "context": ["六大模块"]}]}]
+    },
+    "wb-37-01-02": {
+      "scope_note": "核对目标工号所在行的部门，避免从同一表的其他员工借用部门。",
+      "requirements": [{"id": "目标工号部门", "document_ids": ["workspace-37-01"], "alternatives": [{"quote": "20013416 | 稻壳1 | 2016-05-01 00:00:00 | 销售部", "context": ["员工信息登记表"]}]}]
+    },
+    "wb-37-04-01": {
+      "scope_note": "只核对今日考勤的出勤人数，不要求同一Excel物理行中另一图表的数据。",
+      "requirements": [{"id": "今日出勤", "document_ids": ["workspace-37-04"], "alternatives": [{"quote": "出勤 | 800", "context": ["今日考勤", "考勤项 | 人数"]}]}]
+    },
+    "wb-37-04-02": {
+      "scope_note": "只核对今日考勤的休假人数，不拼接无关的年份/每平方米职员数。",
+      "requirements": [{"id": "今日休假", "document_ids": ["workspace-37-04"], "alternatives": [{"quote": "休假 | 10", "context": ["今日考勤", "考勤项 | 人数"]}]}]
+    },
+    "wb-cross-01": {
+      "scope_note": "两家公司的营业收入增长片段分别核对；比较推断与单位还需语义复核。",
+      "requirements": [
+        {"id": "宏海增速", "document_ids": ["workspace-192-01"], "alternatives": [{"quote": "营业收入462,903,179.20元，同比增长32.09%"}]},
+        {"id": "太湖增速", "document_ids": ["workspace-192-02"], "alternatives": [{"quote": "太湖远大2024年度合并财务报表中营业收入为159,427.51万元，较上年增长4.64%"}]}
+      ]
+    },
+    "wb-cross-03": {
+      "scope_note": "时间、地点、六个环节分别列出，不能因命中了通知就认为PPT流程也完整。",
+      "requirements": [
+        {"id": "时间", "document_ids": ["workspace-340-02"], "alternatives": [{"quote": "2024年3月x日16:00-17:00"}]},
+        {"id": "地点", "document_ids": ["workspace-340-02"], "alternatives": [{"quote": "地点：公司活动室"}]},
+        {"id": "环节1", "document_ids": ["workspace-340-01"], "alternatives": [{"quote": "寿星登场"}]},
+        {"id": "环节2", "document_ids": ["workspace-340-01"], "alternatives": [{"quote": "节目欣赏"}]},
+        {"id": "环节3", "document_ids": ["workspace-340-01"], "alternatives": [{"quote": "发放礼物"}]},
+        {"id": "环节4", "document_ids": ["workspace-340-01"], "alternatives": [{"quote": "寿星感言"}]},
+        {"id": "环节5", "document_ids": ["workspace-340-01"], "alternatives": [{"quote": "游戏环节"}]},
+        {"id": "环节6", "document_ids": ["workspace-340-01"], "alternatives": [{"quote": "合影留念"}]}
+      ]
+    },
+    "wb-cross-04": {
+      "scope_note": "四个总体数据分别核对；不为阅读顺序模糊的月度图额外建立推断答案。",
+      "requirements": [
+        {"id": "下半年招聘", "document_ids": ["workspace-328-01"], "alternatives": [{"quote": "2024年下半年实际招聘人数18人"}]},
+        {"id": "下半年完成率", "document_ids": ["workspace-328-01"], "alternatives": [{"quote": "下半年招聘完成率为75%"}]},
+        {"id": "年度入职", "document_ids": ["workspace-328-03"], "alternatives": [{"quote": "年度总入职178人"}]},
+        {"id": "年度离职", "document_ids": ["workspace-328-03"], "alternatives": [{"quote": "离职75人", "context": ["年度总入职"]}]}
+      ]
+    },
+    "accept-v1-x01": {
+      "scope_note": "诊断当前缺失的华安2025E一侧；此条不是该问题的全部证据定义。",
+      "requirements": [{"id": "华安现金净增加额", "document_ids": ["tableeval-0002"], "alternatives": [{"quote": "现金净增加额 | 1212 | 365 | 2326 | 1138", "context": ["2023A | 2024E | 2025E | 2026E", "单位:百万元"]}]}]
+    },
+    "accept-v1-x04": {
+      "scope_note": "诊断缺失的主要财务比率表一侧；保费收入一侧沿用原标注，不能据此重算整题通过率。",
+      "requirements": [{"id": "2025E速动比率", "document_ids": ["tableeval-0004"], "alternatives": [{"quote": "速动比率 | 0.51 | 0.57 | 0.44 | 0.40 | 0.51", "context": ["2022A | 2023A | 2024E | 2025E | 2026E"]}]}]
+    }
+  },
+  "semantic_reviews": {
+    "accept-v1-r01": {
+      "answer_sha256": "fb3fcf451fd17bcbfd5ef93442e790d6f6b0b5c1d5868144f58ea2f81126369d",
+      "finding": "citation_format_failure",
+      "answer_excerpt": "现金流量表（S1）仅包含 2023A、2024E、2025E、2026E",
+      "notes": "拒答的年份边界与S1一致，但（S1）不是标准[S1]；不是事实答错，而是引用格式不合规。",
+      "source_checks": [{"citation_id": "S1", "quote": "2023A | 2024E | 2025E | 2026E"}]
+    },
+    "accept-v1-r02": {
+      "answer_sha256": "58f29c6f45d1e2449390953d0a95b73ca7e8a2f5dca1c3ee037a7a82d097d07d",
+      "finding": "supported_abstention",
+      "answer_excerpt": "HW4.0 的图像处理能力（fps）一栏显示为“—”",
+      "notes": "已提供目标表，HW4.0对应列为破折号；未当作0或推测数值，引用S2正确。",
+      "source_checks": [{"citation_id": "S2", "quote": "HW4.0 | 2024.02 | Tesla FSD | 完全 | 720 | 80 | —"}]
+    },
+    "accept-v1-r03": {
+      "answer_sha256": "4c9811a292ae7a2c2198d8df13a516ee0514c5125a49214af73e5d8eaeacbef0",
+      "finding": "supported_abstention",
+      "answer_excerpt": "未说明广告宣传费下降的具体业务原因",
+      "notes": "对照本次S1和S2销售费用表，只有项目和金额，未解释下降原因。附带数值可核对；核心拒答合理，不推广成整份年度报告都没有解释。",
+      "source_checks": [{"citation_id": "S1", "quote": "广告宣传费 | 66,919.53 | 111,173.66"}, {"citation_id": "S2", "quote": "广告宣传费 | 8,624,085.81 | 13,234,292.44"}]
+    },
+    "accept-v1-r04": {
+      "answer_sha256": "93fd1e239c94c62b3d86d15355285e65def7c511cff5d6fbc34568666179fa20",
+      "finding": "supported_abstention",
+      "answer_excerpt": "未提供交易最终完成的日期",
+      "notes": "S1是拟实施方案，提供股权和资本变动，没有最终完成日期；没有从拟议推断完成，且引用格式正确。",
+      "source_checks": [{"citation_id": "S1", "quote": "拟实施"}]
+    },
+    "accept-v1-x04": {
+      "answer_sha256": "86d9dc3be283ff61e55a62924cb7e338b9452372cb5b545042f86e177f97ba93",
+      "finding": "grounding_failure",
+      "answer_excerpt": "不过从财务常识看",
+      "notes": "速动比率表未进入上下文；回答在承认缺少依据后仍使用常识给出一般单位结论，违反本次仅依据检索证据的约定。一般常识是否正确与本次是否有来源是两件事；S1只能支持保费收入和百万元单位。",
+      "source_checks": [{"citation_id": "S1", "quote": "利润表(百万元)"}]
+    },
+    "ret-te-1325-01": {
+      "answer_sha256": "03994ecbe42d4d069ec25266d8b8486a58beaa789d5163470ea758531cb24e1e",
+      "finding": "annotation_ambiguity",
+      "answer_excerpt": "资料未说明其持股比例高的原因",
+      "notes": "原题为何可指认购数量的表内关系，也可指业务成因。参考答案只接受前者，模型按后者拒绝推测。暂不机械判错；待确认问法后版本化修订。原表认购股份数字段使用万元的原始不一致也不在本轮偷偷修改。",
+      "source_checks": [{"citation_id": "S1", "quote": "彭建虎 | 3953.88 万元 | 净资产 | 88.851％"}]
+    },
+    "wb-cross-04": {
+      "answer_sha256": "3758736b2ee051bffc3fc9d594a17b5e04b63492bc1c0b5822bfd7f8ad45e39e",
+      "finding": "needs_scope_review",
+      "answer_excerpt": "另一份材料（《招聘工作年度分析报告》）",
+      "notes": "18人和75%有证据，年度178人和75人未召回。模型把未明确命名的另一份材料指认为错误来源；逐月数据是非必要补充，线性化原文不能可靠支持其月份对应，暂不标为全部支持。",
+      "source_checks": [{"citation_id": "S1", "quote": "2024年下半年实际招聘人数18人"}, {"citation_id": "S1", "quote": "下半年招聘完成率为75%"}]
+    }
+  }
+}

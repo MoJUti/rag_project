@@ -36,6 +36,12 @@ class ReverseReranker:
 
 
 class RetrievalPipelineTest(unittest.TestCase):
+    def test_default_final_budget_is_ten(self) -> None:
+        retriever = FakeRetriever(documents(12))
+        result = RetrievalPipeline(retriever).run("问题")
+        self.assertEqual(retriever.calls, [("问题", 10)])
+        self.assertEqual(len(result.documents), 10)
+
     def test_disabled_rerank_preserves_order_and_budget(self) -> None:
         retriever = FakeRetriever(documents(8))
         pipeline = RetrievalPipeline(retriever, final_k=2, candidate_k=8)

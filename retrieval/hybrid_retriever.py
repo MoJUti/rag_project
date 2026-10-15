@@ -68,7 +68,7 @@ class HybridRetrieverService:
     get_document_count: Callable[[], int] | None = None
     vector_k: int = 20
     bm25_k: int = 20
-    final_k: int = 6
+    final_k: int = 10
     rrf_k: int = 60
     strategy_id: str = "hybrid_rrf"
     tokenizer_id: str = "char"
