@@ -1,0 +1,19 @@
+{
+  "version": "acceptance-new-v1",
+  "frozen_on": "2026-10-14",
+  "questions_sha256": "d1b49719b060b27af9acabd5eaea7f64882a089b689bff0ba9ecf79d08ac1212",
+  "question_count": 23,
+  "answerable_count": 19,
+  "locked_profiles": [
+    "dense",
+    "bm25_mixed",
+    "hybrid_mixed",
+    "hybrid_mixed_qwen37"
+  ],
+  "vector_k": 20,
+  "bm25_k": 20,
+  "rrf_k": 60,
+  "candidate_k": 40,
+  "final_k": 6,
+  "note": "同一资料上的新增未调参问题；非外部盲测，看结果后转为回归集，拒答不计算Recall"
+}

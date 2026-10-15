@@ -1,0 +1,2 @@
+# 固定验收题换行，避免Windows检出转换造成冻结文件指纹失效。
+data/eval/zh_public_minibench_v0.1/annotations/acceptance_questions_v1.jsonl text eol=lf

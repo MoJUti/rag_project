@@ -60,6 +60,14 @@ hybrid_vector_k = 20
 hybrid_bm25_k = 20
 hybrid_final_k = 6
 hybrid_rrf_k = 60
+retrieval_strategy = os.getenv("RETRIEVAL_STRATEGY", "hybrid_rrf").strip().lower()
+bm25_tokenizer = os.getenv("BM25_TOKENIZER", "char").strip().lower()
+rerank_strategy = os.getenv("RERANK_STRATEGY", "none").strip()
+rerank_candidate_k = int(os.getenv("RERANK_CANDIDATE_K", "40"))
+evidence_expansion = os.getenv("EVIDENCE_EXPANSION", "none").strip().lower()
+evidence_chunks_directory = os.getenv("EVIDENCE_CHUNKS_DIRECTORY", "").strip()
+evidence_neighbor_radius = int(os.getenv("EVIDENCE_NEIGHBOR_RADIUS", "1"))
+evidence_extra_tokens = int(os.getenv("EVIDENCE_EXTRA_TOKENS", "2000"))
 
 # Backward compatible alias
 similarity_threshold = retrieval_top_k

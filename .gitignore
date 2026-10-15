@@ -7,6 +7,7 @@ __pycache__/
 env/
 venv/
 logs/
+tmp/
 
 # 正式知识库运行数据；只提交目录说明和占位文件。
 storage/*

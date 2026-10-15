@@ -6,10 +6,14 @@ from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_community.chat_models.tongyi import ChatTongyi
 from langchain.chat_models import init_chat_model
 
+from pathlib import Path
+
 from core import config
 from infra.vector_store import VectorStoreService
 from memory.history_store import get_history
 from retrieval.hybrid_retriever import HybridRetrieverService
+from retrieval.pipeline import RetrievalPipeline, RetrievalResult
+from retrieval.evidence_expansion import NeighborhoodExpander
 
 
 def _print_prompt(prompt):
@@ -65,13 +69,40 @@ class RagService:
         self.hybrid_retriever = HybridRetrieverService(
             get_vector_docs=self.vector_service.get_vector_docs,
             get_all_docs=self.vector_service.get_all_documents,
+            get_document_count=self.vector_service.count,
             vector_k=config.hybrid_vector_k,
             bm25_k=config.hybrid_bm25_k,
             final_k=config.hybrid_final_k,
             rrf_k=config.hybrid_rrf_k,
+            strategy_id=config.retrieval_strategy,
+            tokenizer_id=config.bm25_tokenizer,
         )
+        self.retrieval_pipeline = RetrievalPipeline(
+            retriever=self.hybrid_retriever,
+            final_k=config.hybrid_final_k,
+            candidate_k=config.rerank_candidate_k,
+            rerank_strategy=config.rerank_strategy,
+        )
+        if config.evidence_expansion == "neighbors":
+            if not config.evidence_chunks_directory:
+                raise ValueError("开启证据扩展需要配置 EVIDENCE_CHUNKS_DIRECTORY")
+            chunks_directory = Path(config.evidence_chunks_directory)
+            if not chunks_directory.is_absolute():
+                chunks_directory = Path(config.BASE_DIR) / chunks_directory
+            expander = NeighborhoodExpander.from_directory(
+                chunks_directory, radius=config.evidence_neighbor_radius,
+                extra_token_budget=config.evidence_extra_tokens,
+            )
+            expander.validate_index(self.vector_service.get_all_documents())
+            self.retrieval_pipeline.evidence_expander = expander
+        elif config.evidence_expansion != "none":
+            raise ValueError(f"不支持的证据扩展策略：{config.evidence_expansion}")
         self.chat_model = _build_chat_model()
         self.chain = self._build_chain()
+
+    def retrieve_with_trace(self, query: str) -> RetrievalResult:
+        """为问答与后续前端预览提供同一条检索路径。"""
+        return self.retrieval_pipeline.run(query)
 
     def _build_chain(self):
         def format_document(docs: list[Document]):
@@ -93,7 +124,7 @@ class RagService:
             return value["input"]
 
         def hybrid_retrieve(query: str) -> list[Document]:
-            return self.hybrid_retriever.retrieve(query)
+            return self.retrieve_with_trace(query).documents
 
         def format_for_prompt_template(value: dict):
             return {

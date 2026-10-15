@@ -11,6 +11,10 @@
 - `refusal_cases.jsonl`：4 道资料不足问题；测正确拒答和无依据陈述。
 - `excluded_cases.jsonl`：被移出正式评分的候选题及原因。
 - `questions_v0_draft.jsonl`：第一版候选题，仅供追溯，禁止用于正式对比。
+- `acceptance_questions_v1.jsonl`：2026-10-14新增19道可回答题和4道指定资料不足题，作为独立验收套件。
+- `acceptance_v1.lock.json`：新增题目指纹与冻结参数；查看结果后作为回归集，不再称为未见盲测。
+
+新增套件的 `relevant_document_groups` 将重复文件列为等价来源，一个副本命中即满足该组；`evidence.context_quotes` 要求表格列头同时出现在召回上下文中。使用 `scripts/evaluate_node6_acceptance.py` 评分，不能直接交给旧版只识别 `document_id` 的评分脚本。拒答题独立留给生成评测，既不算零Recall，也不把检索到相似资料视作正确拒答。原55题与新增题评分口径有差异，不合并成一个总分。
 
 `retrieval_questions.jsonl` 每行是一道正式检索题，核心字段如下：
 
