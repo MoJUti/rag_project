@@ -17,6 +17,7 @@ from langchain_community.chat_models.tongyi import ChatTongyi
 from langchain.chat_models import init_chat_model
 
 from core import config
+from core.prompt_loader import render_prompt
 
 
 def _debug_log(message: str) -> None:
@@ -71,16 +72,9 @@ def _is_summary_message(message: BaseMessage) -> bool:
 
 def _build_summary_prompt(existing_summary: str, transcript: str) -> str:
     """构建摘要提示词，要求输出结构化且可持续追加的会话记忆。"""
-    return (
-        "你是对话记忆压缩器。请将以下历史对话压缩为简洁摘要，供后续多轮问答使用。\\n"
-        "要求：\\n"
-        "1) 保留关键事实、用户诉求、结论与未解决问题。\\n"
-        "2) 删除寒暄、重复表达、无信息量句子。\\n"
-        "3) 输出使用中文，控制在 6-12 条要点。\\n"
-        "4) 若已有旧摘要，请在其基础上增量更新，而不是简单重复。\\n\\n"
-        f"旧摘要：\\n{existing_summary or '（无）'}\\n\\n"
-        f"待压缩对话：\\n{transcript or '（无）'}"
-    )
+    return render_prompt("memory/conversation_summary.md", {
+        "existing_summary": existing_summary or "（无）", "transcript": transcript or "（无）",
+    }, literal_newlines=True)
 
 
 def _fallback_summary(existing_summary: str, transcript: str) -> str:
