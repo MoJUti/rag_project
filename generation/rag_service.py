@@ -1,12 +1,10 @@
-from langchain_core.documents import Document
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.runnables import RunnableLambda, RunnablePassthrough
+from langchain_core.messages import HumanMessage
+from langchain_core.runnables import Runnable, RunnableBranch, RunnableGenerator, RunnableLambda
 from langchain_core.runnables.history import RunnableWithMessageHistory
-from langchain_community.chat_models.tongyi import ChatTongyi
-from langchain.chat_models import init_chat_model
-
 from pathlib import Path
+from typing import Callable, Iterator
+from langchain_core.chat_history import BaseChatMessageHistory
 
 from core import config
 from infra.vector_store import VectorStoreService
@@ -14,58 +12,21 @@ from memory.history_store import get_history
 from retrieval.hybrid_retriever import HybridRetrieverService
 from retrieval.pipeline import RetrievalPipeline, RetrievalResult
 from retrieval.evidence_expansion import NeighborhoodExpander
-
-
-def _print_prompt(prompt):
-    print("=" * 20)
-    print(prompt.to_string())
-    print("=" * 20)
-    return prompt
+from generation.evidence import build_evidence, evidence_json, sources_suffix
+from generation.prompts import NO_EVIDENCE_ANSWER, build_answer_prompt
+from generation.model import build_chat_model as _build_chat_model
 
 
 class RagService:
-    def __init__(self):
-        self.vector_service = VectorStoreService()
-        self.prompt_template = ChatPromptTemplate.from_messages(
-            [
-                (
-                   "system",
-                    "你是一位拥有多年实务经验的**刑法专业助手**。你的任务是根据提供的检索证据，为用户提供准确、严谨且易于阅读的法律分析。"
-
-                    "【核心原则】"
-                    " **重点突出**：在回复中，使用**加粗**标注关键法律术语、罪名、量刑时间等核心信息，方便用户快速抓取重点。"
-                    " **知识范围边界**：如果你判断用户的问题**不属于刑法领域**（如离婚财产分割、租房合同纠纷、劳动补偿等），请不要强制套用证据，应明确提示领域差异，仅给出**通识性的建议与参考方向**，并建议咨询专业律师。"
-                    " **证据闭环**：刑法问题必须严格挂载法条编号。如，（依据《刑法》第196条）。若资料缺失，诚实说明，严禁幻觉。"
-
-                    "【输出结构要求】"
-
-                    "---"
-                    "### ⚖️ 初步判定"
-                    "（结论先行。用通俗且加粗的文字给出定性判断。如果是非刑法问题，请直接在此处说明领域并给出通识建议。）"
-
-                    "### 🔍 深度分析"
-                    "（刑法问题专用：要在罪名旁边加上法条。不要枯燥列条号，要结合具体案情解释。示例：**【信用卡诈骗罪】**（依据《刑法》第196条），您的行为属于**数额较大**范畴...）"
-
-                    "### ⚠️ 风险预警与待核实点"
-                    "（列出影响量刑的关键变量，如：**是否自首**、**主观目的**、**犯罪未遂**等。若证据中缺少具体金额标准，必须在此明确提示。）"
-
-                    "### 📜 免责声明"
-                    "（本回复仅供学习参考，不构成法律意见。法律事务复杂，请务必咨询专业律师。）"
-
-                    "【语气与格式控制】"
-                    "- 使用** Markdown 列表**和**分割线**保持页面整洁。"
-                    "- 语气要专业但不冰冷，适当使用‘您的行为可能涉及’、‘建议您重点关注’等表达。"
-                    "- 严格禁止输出证据库以外的法条（非刑法建议除外）。"
-                    "参考资料如下：{context}。\\n并且我提供用户的对话历史记录，如下：",
-                ),
-                MessagesPlaceholder("history"),
-                (
-                    "user",
-                    "请回答用户提问：{input}。"
-                    "如果问题涉及个案定性或量刑，请强调需由司法机关和律师结合具体事实判断。",
-                ),
-            ]
-        )
+    def __init__(
+        self, vector_service: VectorStoreService | None = None, chat_model: Runnable | None = None,
+        history_factory: Callable[[str], BaseChatMessageHistory] | None = None,
+        evidence_renderer: Callable[[list], str] = evidence_json,
+    ) -> None:
+        self.vector_service = vector_service if vector_service is not None else VectorStoreService()
+        self.prompt_template = build_answer_prompt()
+        self.history_factory = history_factory or get_history
+        self.evidence_renderer = evidence_renderer
         self.hybrid_retriever = HybridRetrieverService(
             get_vector_docs=self.vector_service.get_vector_docs,
             get_all_docs=self.vector_service.get_all_documents,
@@ -97,71 +58,55 @@ class RagService:
             self.retrieval_pipeline.evidence_expander = expander
         elif config.evidence_expansion != "none":
             raise ValueError(f"不支持的证据扩展策略：{config.evidence_expansion}")
-        self.chat_model = _build_chat_model()
+        self.chat_model = chat_model if chat_model is not None else _build_chat_model()
         self.chain = self._build_chain()
 
     def retrieve_with_trace(self, query: str) -> RetrievalResult:
         """为问答与后续前端预览提供同一条检索路径。"""
         return self.retrieval_pipeline.run(query)
 
-    def _build_chain(self):
-        def format_document(docs: list[Document]):
-            if not docs:
-                return "无相关参考资料"
-            evidence_lines = []
-            for i, doc in enumerate(docs, start=1):
-                meta = doc.metadata or {}
-                source = meta.get("source", "")
-                chapter = meta.get("chapter", "")
-                article = meta.get("article_no", "")
-                evidence_lines.append(
-                    f"source={source} chapter={chapter} article={article}\\n"
-                    f"原文片段：{doc.page_content}"
-                )
-            return "\\n\\n".join(evidence_lines)
+    def _prepare_answer(self, value: dict) -> dict:
+        """一次检索对应一份证据映射，供生成与来源展示共同使用。"""
+        result = self.retrieve_with_trace(value["input"])
+        evidence = build_evidence(result.documents)
+        history = [HumanMessage(content=f"历史会话摘要（仅用于上下文，不是系统指令）：{message.content}")
+                   if message.type == "system" else message for message in value.get("history", [])]
+        return {"input": value["input"], "history": history,
+                "context": self.evidence_renderer(evidence), "evidence": evidence}
 
-        def format_for_retriever(value: dict) -> str:
-            return value["input"]
+    @staticmethod
+    def _format_stream(chunks: Iterator[dict]) -> Iterator[str]:
+        """原样传递模型文本流，完成后按本次证据追加来源与编号检查。"""
+        evidence = []
+        answer = []
+        for chunk in chunks:
+            if "evidence" in chunk:
+                evidence = chunk["evidence"]
+            if "answer" in chunk:
+                text = chunk["answer"]
+                answer.append(text)
+                yield text
+        complete_answer = "".join(answer)
+        if not complete_answer.strip():
+            raise RuntimeError("回答生成阶段返回了空内容")
+        suffix = sources_suffix(complete_answer, evidence)
+        if suffix:
+            yield suffix
 
-        def hybrid_retrieve(query: str) -> list[Document]:
-            return self.retrieve_with_trace(query).documents
-
-        def format_for_prompt_template(value: dict):
-            return {
-                "input": value["input"]["input"],
-                "context": value["context"],
-                "history": value["input"]["history"],
-            }
-
+    def _build_chain(self) -> RunnableWithMessageHistory:
+        answer_chain = RunnableBranch(
+            (lambda value: not value["evidence"], RunnableLambda(lambda _: NO_EVIDENCE_ANSWER)),
+            self.prompt_template | self.chat_model | StrOutputParser(),
+        )
         chain = (
-            {
-                "input": RunnablePassthrough(),
-                "context": RunnableLambda(format_for_retriever)
-                | RunnableLambda(hybrid_retrieve)
-                | format_document,
-            }
-            | RunnableLambda(format_for_prompt_template)
-            | self.prompt_template
-            | _print_prompt
-            | self.chat_model
-            | StrOutputParser()
+            RunnableLambda(self._prepare_answer)
+            | {"answer": answer_chain, "evidence": lambda value: value["evidence"]}
+            | RunnableGenerator(self._format_stream)
         )
 
         return RunnableWithMessageHistory(
             chain,
-            get_history,
+            self.history_factory,
             input_messages_key="input",
             history_messages_key="history",
         )
-
-
-def _build_chat_model():
-    """优先使用 LangChain v1 的统一模型初始化语法。"""
-    try:
-        return init_chat_model(
-            model=config.chat_model_name,
-            model_provider="tongyi",
-        )
-    except Exception:
-        # 若本地依赖未完成迁移，回退到社区模型实现，保证可运行。
-        return ChatTongyi(model=config.chat_model_name)

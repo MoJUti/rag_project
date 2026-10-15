@@ -29,7 +29,7 @@ def new_session_id() -> str:
 
 
 def default_messages() -> list[dict[str, str]]:
-    return [{"role": "assistant", "content": "你好，我是一个法律问答助手，我有什么可以帮助你？"}]
+    return [{"role": "assistant", "content": "你好，我可以根据知识库资料回答问题，并提供对应的来源。你想了解什么？"}]
 
 
 def load_messages_from_history(session_id: str) -> list[dict[str, str]]:
@@ -162,7 +162,7 @@ def render_bubble(role: str, content: str) -> None:
     )
 
 
-st.set_page_config(page_title="智能法律问答系统", page_icon="⚖️", layout="centered")
+st.set_page_config(page_title="知识库问答", page_icon="📚", layout="centered")
 
 if not os.getenv("DASHSCOPE_API_KEY", "").strip():
     st.error("未配置 DASHSCOPE_API_KEY，暂时无法初始化问答服务。")
@@ -400,8 +400,8 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-st.title("智能法律问答系统")
-st.caption("刑法问答助手")
+st.title("知识库问答")
+st.caption("基于资料回答，提供来源依据")
 st.divider()
 
 if "session_ids" not in st.session_state:
@@ -455,7 +455,11 @@ if prompt:
                 yield chunk
 
         with st.empty():
-            ai_text = st.write_stream(capture(res_stream, ai_res_list))
+            try:
+                ai_text = st.write_stream(capture(res_stream, ai_res_list))
+            except (RuntimeError, ValueError) as exc:
+                st.error(f"本次回答未完成：{exc}")
+                st.stop()
 
         final_ai_text = ai_text if isinstance(ai_text, str) else "".join(ai_res_list)
         st.session_state["message"].append({"role": "assistant", "content": final_ai_text})

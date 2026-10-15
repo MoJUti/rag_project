@@ -1,4 +1,5 @@
 import os
+from urllib.parse import urlsplit
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -58,7 +59,7 @@ retrieval_top_k = 5
 retrieval_source_filter = ""
 hybrid_vector_k = 20
 hybrid_bm25_k = 20
-hybrid_final_k = 6
+hybrid_final_k = 10
 hybrid_rrf_k = 60
 retrieval_strategy = os.getenv("RETRIEVAL_STRATEGY", "hybrid_rrf").strip().lower()
 bm25_tokenizer = os.getenv("BM25_TOKENIZER", "char").strip().lower()
@@ -79,8 +80,16 @@ embedding_base_url = os.getenv(
     "DASHSCOPE_BASE_URL",
     "https://maas.qianwenaiapi.com/compatible-mode/v1",
 ).strip()
-# 主力推理模型，用于生成最终给用户的专业法律回答
-chat_model_name = "qwen3-max"
+# 原生SDK地址与OpenAI兼容地址不同，默认沿用已经配置的平台主机。
+_platform_url = urlsplit(embedding_base_url)
+dashscope_http_api_base_url = os.getenv(
+    "DASHSCOPE_HTTP_API_BASE_URL", f"{_platform_url.scheme}://{_platform_url.netloc}/api/v1",
+).strip().rstrip("/")
+# 回答模型与解析、嵌入、重排分开配置，思考模式由回答适配器关闭。
+chat_model_name = os.getenv("CHAT_MODEL", "qwen3.8-max").strip()
+chat_fallback_provider = os.getenv("CHAT_FALLBACK_PROVIDER", "none").strip().lower()
+zhipu_chat_model = os.getenv("ZHIPU_CHAT_MODEL", "glm-5.3-flash").strip()
+zhipu_base_url = os.getenv("ZHIPU_BASE_URL", "https://open.bigmodel.cn/api/paas/v4").strip()
 # 轻量级推理模型，用于生成对话摘要、意图识别等
 light_model_name = "qwen-turbo"  # 用于对话摘要、意图识别等轻量级内部任务
 
