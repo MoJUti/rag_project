@@ -14,7 +14,7 @@
 当前模型配置：
 
 - 主回答模型：`qwen3.8-max`，关闭思考；模型池支持 `glm-5.3-flash` 智谱备用，填写独立密钥并显式开启后生效。见[回答模型池设计与使用](docs/回答模型池设计与使用.md)。真实问答质量评测尚未完成。
-- 轻量摘要模型：`qwen-turbo`
+- 会话摘要模型：`glm-5.3-flash`，low档；只用于当前会话，跨会话记忆暂不启用
 - 向量模型：`text-embedding-v4`
 
 预览：
@@ -137,26 +137,22 @@ streamlit run app/streamlit_chat.py
 
 ### 6.2 记忆压缩相关
 
-- `memory_keep_recent_rounds`: 保留最近轮次（当前 3）
-- `memory_summary_trigger_rounds`: 摘要触发轮次（当前 5）
-- `memory_history_max_tokens`: 历史 token 预算（当前 4000）
-- `memory_summary_max_chars`: 摘要最大字符（当前 1500）
+- `memory_history_max_tokens`: 历史视图总预算，当前32768估算Token，包含摘要与保留的原文
+- `memory_summary_max_tokens`: 摘要上限，当前4096估算Token，不要求写满
+- `memory_compression_trigger`: 当前为 `tokens`，预算内保留原文，超预算才摘要
+- `memory_keep_recent_rounds` / `memory_summary_trigger_rounds`: 旧轮次策略兼容参数，当前3/5，不限制正常Token策略的原文保留轮数
+- `memory_summary_max_chars`: 旧字符上限兼容参数，当前Token模式不使用该限制
 - `memory_summary_enabled`: 是否启用摘要
 - `memory_summary_tag`: 内部摘要标识
 - `memory_compression_debug`: 是否打印压缩日志（当前开启）
 
 ## 7. 记忆压缩策略（当前实现）
 
-在 `memory/history_store.py` 中执行：
+`memory/file_history.py` 保存完整原始对话，`memory/session_context.py` 构建受预算约束的模型视图，压缩不覆盖原文。预算内不提前摘要；超预算后为摘要预留空间，尽量保留近期完整轮次，使用已配置GLM、low档增量更新较早内容。
 
-1. 识别内部摘要消息与普通对话消息。
-2. 普通消息按用户发言切分轮次。
-3. 优先保留最近 N 轮。
-4. 达到触发阈值时，将更早轮次交给 `qwen-turbo` 做增量摘要。
-5. 重建为“摘要 + 最近轮次”。
-6. 若超 Token 预算，按轮次删除最近窗口中最旧轮，直到满足预算或仅剩 1 轮。
+摘要失败明确标记降级，不将截断当作成功；最新一轮超过预算时明确报错。用户要求忘记的具体旧值不再带入新摘要，但不等于物理删除完整聊天记录。跨会话记忆关闭。
 
-说明：内部摘要对模型可见、对用户界面不可见（聊天页已过滤）。
+可选 `QUERY_RESOLUTION_STRATEGY=glm_history` 在检索前补全历史指代，有歧义则先澄清。默认 `original` 不变，不增加消歧模型请求。详见[节点8说明](docs/08-记忆与会话压缩.md)及[插件对照](docs/历史查询消歧插件与对照测试.md)。
 
 ## 8. 测试与验证
 
