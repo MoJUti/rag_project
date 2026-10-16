@@ -63,6 +63,8 @@ hybrid_final_k = 10
 hybrid_rrf_k = 60
 retrieval_strategy = os.getenv("RETRIEVAL_STRATEGY", "hybrid_rrf").strip().lower()
 bm25_tokenizer = os.getenv("BM25_TOKENIZER", "char").strip().lower()
+# 历史消歧插件先对照测试，不改变原问题检索默认值。
+query_resolution_strategy = os.getenv("QUERY_RESOLUTION_STRATEGY", "original").strip().lower()
 rerank_strategy = os.getenv("RERANK_STRATEGY", "none").strip()
 rerank_candidate_k = int(os.getenv("RERANK_CANDIDATE_K", "40"))
 evidence_expansion = os.getenv("EVIDENCE_EXPANSION", "none").strip().lower()
@@ -90,18 +92,21 @@ chat_model_name = os.getenv("CHAT_MODEL", "qwen3.8-max").strip()
 chat_fallback_provider = os.getenv("CHAT_FALLBACK_PROVIDER", "none").strip().lower()
 zhipu_chat_model = os.getenv("ZHIPU_CHAT_MODEL", "glm-5.3-flash").strip()
 zhipu_base_url = os.getenv("ZHIPU_BASE_URL", "https://open.bigmodel.cn/api/paas/v4").strip()
-# 轻量级推理模型，用于生成对话摘要、意图识别等
-light_model_name = "qwen-turbo"  # 用于对话摘要、意图识别等轻量级内部任务
+# 保留旧内部模型配置供兼容；会话摘要现使用上述智谱配置与low档，不走该型号。
+light_model_name = "qwen-turbo"
 
-# Memory compression strategy config
+# 会话历史压缩配置
 # 1) 滑动窗口：保留最近 N 轮对话（1 轮 = 用户 1 条 + 助手 1 条）
 memory_keep_recent_rounds = 3
 # 2) 摘要触发：当累计轮数超过 M 时触发摘要压缩
 memory_summary_trigger_rounds = 5
 # 3) Token 预算：压缩后的历史消息估算 token 不超过该值
-memory_history_max_tokens = 4000
-# 4) 摘要最长字符数：约束摘要体积，防止反向膨胀
+memory_history_max_tokens = 32768
+# 4) 字符上限仅供旧轮次策略兼容；当前按下方Token上限校验摘要。
 memory_summary_max_chars = 1500
+# 用户确认32K历史、4K摘要上限；预算内保留原文，不再按固定轮数提前摘要。
+memory_compression_trigger = "tokens"
+memory_summary_max_tokens = 4096
 # 5) 内部摘要开关：允许按环境快速关闭摘要，仅保留滑动窗口
 memory_summary_enabled = True
 # 6) 内部摘要消息前缀：用于程序识别，展示层可据此隐藏

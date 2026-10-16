@@ -11,11 +11,14 @@ from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 from core import config
 from memory import history_store as hs
+from memory.session_context import MemoryBudgetError
 
 
 class TestMemoryCompression(unittest.TestCase):
     def setUp(self):
         self._backup = {
+            "memory_compression_trigger": config.memory_compression_trigger,
+            "memory_summary_max_tokens": config.memory_summary_max_tokens,
             "memory_keep_recent_rounds": config.memory_keep_recent_rounds,
             "memory_summary_trigger_rounds": config.memory_summary_trigger_rounds,
             "memory_history_max_tokens": config.memory_history_max_tokens,
@@ -25,6 +28,8 @@ class TestMemoryCompression(unittest.TestCase):
         }
 
         config.memory_keep_recent_rounds = 4
+        config.memory_compression_trigger = "rounds"
+        config.memory_summary_max_tokens = None
         config.memory_summary_trigger_rounds = 6
         config.memory_history_max_tokens = 1500
         config.memory_summary_max_chars = 800
@@ -71,17 +76,10 @@ class TestMemoryCompression(unittest.TestCase):
 
         with patch("memory.history_store._summarize_messages", return_value="短摘要"):
             compressed = hs._compress_messages(source)
+        self.assertLessEqual(hs._estimate_messages_tokens(compressed), config.memory_history_max_tokens)
+        self.assertGreaterEqual(self._count_human_rounds(compressed), 1)
 
-        total_tokens = hs._estimate_messages_tokens(compressed)
-        human_rounds = self._count_human_rounds(compressed)
-
-        self.assertGreaterEqual(human_rounds, 1)
-        self.assertLessEqual(human_rounds, config.memory_keep_recent_rounds)
-        if total_tokens > config.memory_history_max_tokens:
-            # 极端情况下允许剩余 1 轮仍超预算，这是当前实现的边界行为。
-            self.assertEqual(human_rounds, 1)
-
-    def test_summary_fallback_when_model_fails(self):
+    def test_summary_failure_is_explicit_not_truncated_as_success(self):
         source = self._build_round_messages(rounds=2, chars_per_msg=30)
 
         class BrokenModel:
@@ -89,10 +87,8 @@ class TestMemoryCompression(unittest.TestCase):
                 raise RuntimeError("mock failure")
 
         with patch("memory.history_store._build_light_model", return_value=BrokenModel()):
-            summary = hs._summarize_messages(source, "旧摘要")
-
-        self.assertTrue(len(summary) > 0)
-        self.assertLessEqual(len(summary), config.memory_summary_max_chars)
+            with self.assertRaisesRegex(RuntimeError, "GLM会话摘要失败"):
+                hs._summarize_messages(source, "旧摘要")
 
     def test_summary_tag_recognition(self):
         yes_msg = SystemMessage(content=f"{config.memory_summary_tag}\nabc")

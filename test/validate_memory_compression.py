@@ -54,22 +54,27 @@ def run_file_history_demo():
     with tempfile.TemporaryDirectory() as tmpdir:
         with temp_config(chat_history_directory=tmpdir):
             history = hs.FileChatMessageHistory("chat_demo", tmpdir)
-            # 先写入 7 轮，触发摘要。
+            # 写入只追加完整存档；读取上下文视图时才触发摘要。
             history.add_messages(build_round_messages(7, 40))
             # 再追加 1 轮，观察摘要与最近轮次保留策略。
             history.add_messages(build_round_messages(1, 30))
 
             loaded = history.messages
+            context = history.context_messages()
             print("=" * 72)
             print("[FILE HISTORY DEMO] 本地历史文件写入后状态")
             print(f"历史消息条数: {len(loaded)}")
             print("消息类型:", [m.type for m in loaded])
-            print("是否存在摘要:", any(hs._is_summary_message(m) for m in loaded))
-            print("会话文件:", os.path.join(tmpdir, "chat_demo"))
+            print("存档是否混入新摘要:", any(hs._is_summary_message(m) for m in loaded))
+            print("模型上下文条数:", len(context))
+            print("上下文是否含摘要:", any(hs._is_summary_message(m) for m in context))
+            print("会话文件:", history.file_path)
 
 
 def main():
     with temp_config(
+        memory_compression_trigger="rounds",
+        memory_summary_max_tokens=None,
         memory_keep_recent_rounds=4,
         memory_summary_trigger_rounds=6,
         memory_history_max_tokens=1500,

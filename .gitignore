@@ -34,6 +34,9 @@ storage/evaluations/*
 # 环境配置（含密钥）
 .env
 
+# 会话原始历史与压缩状态是本地运行数据；不影响仓库中已有的旧示例。
+chat_history/.memory_v2/
+
 # IDE
 .vscode/
 .idea/

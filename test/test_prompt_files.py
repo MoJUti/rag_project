@@ -7,7 +7,7 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
-from core import prompt_loader
+from core import config, prompt_loader
 from generation import prompts
 from ingestion.parsers.qwen_fallback import build_review_prompt
 from ingestion.parsers.review_models import AnomalyType
@@ -72,16 +72,20 @@ class PromptLoaderTest(unittest.TestCase):
 
 class PromptMigrationTest(unittest.TestCase):
     def test_model_inputs_match_reviewed_snapshots(self) -> None:
+        # 此快照专测旧字符上限文案；生产Token策略另行验证。
+        item = patch.object(config, "memory_summary_max_tokens", None)
+        item.start()
+        self.addCleanup(item.stop)
         target = SimpleNamespace(target_id="target-test", document_format=SimpleNamespace(value="pdf"),
                                  locator="page:3", anomalies=[AnomalyType.MISSING_TEXT], evidence={"content": "check"})
-        # 回答提示词按本次重写更新快照；解析和摘要仍保持迁移前输入不变。
+        # 回答与解析保持节点7快照；节点8明确更新摘要规则和实际换行。
         snapshots = [
             (prompts.SYSTEM_PROMPT, "6acd53ea322d6b0f019ba4326ff8031368d3eb6b2b6d7348512bda091da1b7a4"),
             (prompts.build_answer_prompt().invoke({"history": [], "context": "context", "input": "question"}).to_string(),
              "fb0707f0771d58ee89ee92422e583b553c90f8f3c7399324b1687a3153d17676"),
             (build_review_prompt(target), "e99e6f4bbbcd43f5e620dccec77b5c03aac9b2061a70b3ab4d505aaaa9c39858"),
-            (_build_summary_prompt("old", "dialogue"), "6e3a9f221420db5870f37728baaad682c6b36aec244df58324be807130d7e036"),
-            (_build_summary_prompt("", ""), "e77e6d43e2f854524846e99e5b8a8f3c55f9ba80fae35543455afe371b5ed772"),
+            (_build_summary_prompt("old", "dialogue"), "02d6e81db16ada377f2cadc6c949018bb0b50ce995384f4c51ee9a30989bbfa8"),
+            (_build_summary_prompt("", ""), "95c66c5e0a260c76366ac1c4fa046811a9853d6a02e2bad85dcd2afa3f354916"),
         ]
         for text, expected in snapshots:
             self.assertEqual(hashlib.sha256(text.encode("utf-8")).hexdigest(), expected)

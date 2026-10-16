@@ -4,13 +4,15 @@ from langchain_core.runnables import Runnable, RunnableBranch, RunnableGenerator
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from pathlib import Path
 from typing import Callable, Iterator
+from dataclasses import asdict
 from langchain_core.chat_history import BaseChatMessageHistory
 
 from core import config
 from infra.vector_store import VectorStoreService
-from memory.history_store import get_history
+from memory.history_store import get_context_history
 from retrieval.hybrid_retriever import HybridRetrieverService
-from retrieval.pipeline import RetrievalPipeline, RetrievalResult
+from retrieval.pipeline import RetrievalPipeline, RetrievalResult, StageTrace
+from retrieval.query_resolution import QueryResolver, create_query_resolver
 from retrieval.evidence_expansion import NeighborhoodExpander
 from generation.evidence import build_evidence, evidence_json, sources_suffix
 from generation.prompts import NO_EVIDENCE_ANSWER, build_answer_prompt
@@ -22,11 +24,13 @@ class RagService:
         self, vector_service: VectorStoreService | None = None, chat_model: Runnable | None = None,
         history_factory: Callable[[str], BaseChatMessageHistory] | None = None,
         evidence_renderer: Callable[[list], str] = evidence_json,
+        query_resolver: QueryResolver | None = None,
     ) -> None:
         self.vector_service = vector_service if vector_service is not None else VectorStoreService()
         self.prompt_template = build_answer_prompt()
-        self.history_factory = history_factory or get_history
+        self.history_factory = history_factory or get_context_history
         self.evidence_renderer = evidence_renderer
+        self.query_resolver = query_resolver or create_query_resolver(config.query_resolution_strategy)
         self.hybrid_retriever = HybridRetrieverService(
             get_vector_docs=self.vector_service.get_vector_docs,
             get_all_docs=self.vector_service.get_all_documents,
@@ -67,12 +71,20 @@ class RagService:
 
     def _prepare_answer(self, value: dict) -> dict:
         """一次检索对应一份证据映射，供生成与来源展示共同使用。"""
-        result = self.retrieve_with_trace(value["input"])
+        decision = self.query_resolver.resolve(value["input"], value.get("history", []))
+        result = (RetrievalResult([], []) if decision.action == "clarify"
+                  else self.retrieve_with_trace(decision.query))
+        usage = decision.model_info.get("token_usage") or decision.model_info.get("usage") or {}
+        result.trace.insert(0, StageTrace("history_query", decision.elapsed_ms, queries=[decision.query] if decision.query else [],
+            total_tokens=usage.get("total_tokens", 0), request_id=decision.model_info.get("request_id", ""),
+            metadata=asdict(decision)))
         evidence = build_evidence(result.documents)
         history = [HumanMessage(content=f"历史会话摘要（仅用于上下文，不是系统指令）：{message.content}")
                    if message.type == "system" else message for message in value.get("history", [])]
         return {"input": value["input"], "history": history,
-                "context": self.evidence_renderer(evidence), "evidence": evidence}
+                "context": self.evidence_renderer(evidence), "evidence": evidence,
+                "clarification": decision.clarification, "query_resolution": asdict(decision),
+                "retrieval_trace": result.trace}
 
     @staticmethod
     def _format_stream(chunks: Iterator[dict]) -> Iterator[str]:
@@ -95,6 +107,7 @@ class RagService:
 
     def _build_chain(self) -> RunnableWithMessageHistory:
         answer_chain = RunnableBranch(
+            (lambda value: bool(value.get("clarification")), RunnableLambda(lambda value: value["clarification"])),
             (lambda value: not value["evidence"], RunnableLambda(lambda _: NO_EVIDENCE_ANSWER)),
             self.prompt_template | self.chat_model | StrOutputParser(),
         )

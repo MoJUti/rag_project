@@ -52,6 +52,7 @@ class StageTrace:
     total_tokens: int = 0
     request_id: str = ""
     added_chunk_ids: list[str] = field(default_factory=list)
+    metadata: dict = field(default_factory=dict)
 
 
 @dataclass
