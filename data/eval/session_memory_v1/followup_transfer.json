@@ -1,0 +1,11 @@
+{
+  "version": "followup-entity-transfer-v1",
+  "retrieval_pairs": [
+    {
+      "id": "R03",
+      "source_question_id": "wb-192-02-02",
+      "history": [["现在只讨论浙江太湖远大新材料股份有限公司的年度报告，不讨论宏海科技。", "好的，接下来只讨论太湖远大这份年报。"]],
+      "followup": "它的法定代表人是谁？"
+    }
+  ]
+}
