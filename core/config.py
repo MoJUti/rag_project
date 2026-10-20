@@ -92,6 +92,8 @@ chat_model_name = os.getenv("CHAT_MODEL", "qwen3.8-max").strip()
 chat_fallback_provider = os.getenv("CHAT_FALLBACK_PROVIDER", "none").strip().lower()
 zhipu_chat_model = os.getenv("ZHIPU_CHAT_MODEL", "glm-5.3-flash").strip()
 zhipu_base_url = os.getenv("ZHIPU_BASE_URL", "https://open.bigmodel.cn/api/paas/v4").strip()
+# 用户确认新版React工作台默认GLM/low；不改变旧Streamlit的模型池顺序。
+api_chat_provider = os.getenv("API_CHAT_PROVIDER", "zhipu").strip().lower()
 # 保留旧内部模型配置供兼容；会话摘要现使用上述智谱配置与low档，不走该型号。
 light_model_name = "qwen-turbo"
 
