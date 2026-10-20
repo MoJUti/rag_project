@@ -1,6 +1,6 @@
 # 现代知识库（RAG + 可插拔检索 + 来源引用）
 
-本项目从法律问答原型逐步改造为通用中文知识库，基于 Streamlit 提供上传与对话界面。当前已完成多格式解析、结构切块、向量库对比及可选检索策略，正在接入通用回答、来源引用和拒答。分节点设计与当前限制见[改造文档](docs/README.md)。下方旧上传流程和历史截图尚未全部迁移。
+本项目从法律问答原型逐步改造为通用中文知识库。新版界面使用React＋TypeScript＋Vite，后端使用FastAPI，已跑通会话、流式问答、来源引用与流程查看。多格式解析、结构切块和可插拔检索复用现有Python模块；新界面的文档管理与切块预览仍待接入。Streamlit仅作迁移过渡，新版确认可用后删除。分节点设计与当前限制见[改造文档](docs/README.md)。
 
 ## 1. 项目能力
 
@@ -8,16 +8,17 @@
 - 混合召回：向量检索 + BM25 并行召回，通过 RRF 融合后返回证据。
 - 生成回答：通用知识库提示词、流式回答、引用编号与真实来源映射；空资料直接说明不足。
 - 会话管理：会话列表、新建、置顶、删除、持久化历史。
-- 记忆压缩：滑动窗口 + 摘要压缩 + Token 预算裁剪。
-- 可观测性：可开启压缩调试日志，直接在控制台查看压缩过程。
+- 记忆压缩：完整存档与模型视图分离，32K历史预算、4K摘要上限，跨会话记忆关闭。
+- 可观测性：新版右侧展示实际查询、检索阶段、最终证据、模型用量和历史统计。
 
 当前模型配置：
 
-- 主回答模型：`qwen3.8-max`，关闭思考；模型池支持 `glm-5.3-flash` 智谱备用，填写独立密钥并显式开启后生效。见[回答模型池设计与使用](docs/回答模型池设计与使用.md)。真实问答质量评测尚未完成。
+- 新版默认回答：`glm-5.3-flash`、low档，千问为可选项；不会自动混接两家模型的回答。由`API_CHAT_PROVIDER=zhipu`控制默认供应商。
+- 旧Streamlit模型池仍沿用千问优先的原配置，迁移期间未改其顺序。既有问答评测和表格等已知风险见节点7文档。
 - 会话摘要模型：`glm-5.3-flash`，low档；只用于当前会话，跨会话记忆暂不启用
 - 向量模型：`text-embedding-v4`
 
-预览：
+旧Streamlit历史预览（不是新版React界面）：
 
 ![alt text](image/演示01.png)
 
@@ -25,6 +26,8 @@
 
 ```text
 KnowledgeBase-RAG-LLM-System/
+├── frontend/                        # React、TypeScript、Vite工作台及前端测试
+├── api/                             # FastAPI会话接口与SSE问答
 ├── app/
 │   ├── streamlit_chat.py            # 对话页面
 │   └── streamlit_upload.py          # 文档上传与入库页面
@@ -93,7 +96,19 @@ ANONYMIZED_TELEMETRY=False
 
 在项目根目录执行。
 
-### 5.1 启动上传页面（先入库）
+### 5.1 新版React工作台（优先使用）
+
+本轮实测Python3.11、Node22.22.3。先安装`requirements.txt`中的Python依赖，再执行：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/start_web.ps1
+```
+
+访问`http://127.0.0.1:8765/`，保留运行终端。首次会安装前端锁定依赖并构建，之后由FastAPI统一提供页面和接口，不需要额外运行Node服务器。已构建时可加`-SkipBuild`。
+
+密钥只填根目录`.env`；新版默认GLM/low，页面可选择千问。前端不能包含模型密钥。开发、接口、测试和迁移边界见[React工作台迁移与首轮验收](docs/React工作台迁移与首轮验收.md)。
+
+### 5.2 旧Streamlit上传页面（迁移过渡）
 
 ```powershell
 .\.venv\Scripts\python.exe -m streamlit run app/streamlit_upload.py
@@ -105,7 +120,7 @@ ANONYMIZED_TELEMETRY=False
 uv run streamlit run app/streamlit_upload.py
 ```
 
-### 5.2 启动聊天页面
+### 5.3 旧Streamlit聊天页面（迁移过渡）
 
 ```powershell
 .\.venv\Scripts\python.exe -m streamlit run app/streamlit_chat.py
