@@ -13,6 +13,8 @@ if PROJECT_ROOT not in sys.path:
 
 from core import config
 from generation.rag_service import RagService
+from generation.observability import stream_with_trace
+from app.trace_panel import render_settings, render_trace
 from memory.history_store import (
     delete_history,
     get_history,
@@ -84,6 +86,7 @@ def _consume_query_action() -> None:
         st.session_state["message"] = load_messages_from_history(sid)
     elif action == "delete" and sid:
         delete_history(sid)
+        st.session_state.get("request_traces", {}).pop(sid, None)
         remaining = list_session_ids()
         if not remaining:
             created_id = new_session_id()
@@ -402,6 +405,7 @@ st.markdown(
 
 st.title("知识库问答")
 st.caption("基于资料回答，提供来源依据")
+render_settings()
 st.divider()
 
 if "session_ids" not in st.session_state:
@@ -441,13 +445,17 @@ for message in st.session_state["message"]:
 st.markdown("</div>", unsafe_allow_html=True)
 
 prompt = st.chat_input("请输入你的问题")
+if "request_traces" not in st.session_state:
+    st.session_state["request_traces"] = {}
 if prompt:
     st.session_state["message"].append({"role": "user", "content": prompt})
     render_bubble("user", prompt)
 
     ai_res_list = []
+    trace = {}
+    st.session_state["request_traces"][st.session_state["active_session_id"]] = trace
     with st.spinner("思考中..."):
-        res_stream = st.session_state["rag"].chain.stream({"input": prompt}, session_config)
+        res_stream = stream_with_trace(st.session_state["rag"], prompt, session_config, trace)
 
         def capture(generator, cache_list):
             for chunk in generator:
@@ -459,8 +467,11 @@ if prompt:
                 ai_text = st.write_stream(capture(res_stream, ai_res_list))
             except (RuntimeError, ValueError) as exc:
                 st.error(f"本次回答未完成：{exc}")
+                render_trace(trace)
                 st.stop()
 
         final_ai_text = ai_text if isinstance(ai_text, str) else "".join(ai_res_list)
         st.session_state["message"].append({"role": "assistant", "content": final_ai_text})
         st.rerun()
+
+render_trace(st.session_state["request_traces"].get(st.session_state["active_session_id"]))

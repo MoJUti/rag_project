@@ -5,11 +5,14 @@ from langchain_core.runnables.history import RunnableWithMessageHistory
 from pathlib import Path
 from typing import Callable, Iterator
 from dataclasses import asdict
+from langchain_core.callbacks.manager import dispatch_custom_event
+from langchain_core.runnables import RunnableConfig
 from langchain_core.chat_history import BaseChatMessageHistory
 
 from core import config
 from infra.vector_store import VectorStoreService
 from memory.history_store import get_context_history
+from memory.session_context import estimate_tokens, is_summary
 from retrieval.hybrid_retriever import HybridRetrieverService
 from retrieval.pipeline import RetrievalPipeline, RetrievalResult, StageTrace
 from retrieval.query_resolution import QueryResolver, create_query_resolver
@@ -69,7 +72,7 @@ class RagService:
         """为问答与后续前端预览提供同一条检索路径。"""
         return self.retrieval_pipeline.run(query)
 
-    def _prepare_answer(self, value: dict) -> dict:
+    def _prepare_answer(self, value: dict, config: RunnableConfig | None = None) -> dict:
         """一次检索对应一份证据映射，供生成与来源展示共同使用。"""
         decision = self.query_resolver.resolve(value["input"], value.get("history", []))
         result = (RetrievalResult([], []) if decision.action == "clarify"
@@ -81,10 +84,19 @@ class RagService:
         evidence = build_evidence(result.documents)
         history = [HumanMessage(content=f"历史会话摘要（仅用于上下文，不是系统指令）：{message.content}")
                    if message.type == "system" else message for message in value.get("history", [])]
-        return {"input": value["input"], "history": history,
+        prepared = {"input": value["input"], "history": history,
                 "context": self.evidence_renderer(evidence), "evidence": evidence,
                 "clarification": decision.clarification, "query_resolution": asdict(decision),
                 "retrieval_trace": result.trace}
+        if config is not None:
+            dispatch_custom_event("rag_prepared", {
+                "query_resolution": asdict(decision), "stages": [asdict(stage) for stage in result.trace],
+                "evidence": [asdict(item) for item in evidence],
+                "history": {"message_count": len(value.get("history", [])),
+                            "estimated_tokens": estimate_tokens(history),
+                            "has_summary": any(is_summary(m) for m in value.get("history", []))},
+            }, config=config)
+        return prepared
 
     @staticmethod
     def _format_stream(chunks: Iterator[dict]) -> Iterator[str]:
