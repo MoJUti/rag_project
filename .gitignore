@@ -4,6 +4,9 @@ __pycache__/
 *.so
 .Python
 .venv/
+frontend/node_modules/
+frontend/dist/
+frontend/*.tsbuildinfo
 env/
 venv/
 logs/
